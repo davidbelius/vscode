@@ -12,7 +12,7 @@ import { IInstantiationService } from '../../../../platform/instantiation/common
 import { IShellLaunchConfig, TerminalLocation } from '../../../../platform/terminal/common/terminal.js';
 import { IEditorPane } from '../../../common/editor.js';
 import { EditorInput } from '../../../common/editor/editorInput.js';
-import { IDeserializedTerminalEditorInput, ITerminalEditorService, ITerminalInstance, ITerminalInstanceService, TerminalEditorLocation } from './terminal.js';
+import { IDeserializedTerminalEditorInput, ITerminalEditorService, ITerminalGroupService, ITerminalInstance, ITerminalInstanceService, TerminalEditorLocation } from './terminal.js';
 import { TerminalEditorInput } from './terminalEditorInput.js';
 import { getInstanceFromResource } from './terminalUri.js';
 import { TerminalContextKeys } from '../common/terminalContextKey.js';
@@ -48,6 +48,7 @@ export class TerminalEditorService extends Disposable implements ITerminalEditor
 		@IEditorService private readonly _editorService: IEditorService,
 		@IEditorGroupsService private readonly _editorGroupsService: IEditorGroupsService,
 		@ITerminalInstanceService private readonly _terminalInstanceService: ITerminalInstanceService,
+		@ITerminalGroupService private readonly _terminalGroupService: ITerminalGroupService,
 		@IInstantiationService private readonly _instantiationService: IInstantiationService,
 		@ILifecycleService lifecycleService: ILifecycleService,
 		@IContextKeyService contextKeyService: IContextKeyService
@@ -236,8 +237,41 @@ export class TerminalEditorService extends Disposable implements ITerminalEditor
 	}
 
 	reviveInput(deserializedInput: IDeserializedTerminalEditorInput): EditorInput {
-		const newDeserializedInput = { ...deserializedInput, findRevivedId: true };
-		const instance = this._terminalInstanceService.createInstance({ attachPersistentProcess: newDeserializedInput }, TerminalLocation.Editor);
+		// Panel groups and editor inputs restore independently. If stale durable
+		// state claims the same persistent process in both locations, panel revival
+		// runs first. Reuse and transfer that instance instead of attaching the PTY a
+		// second time and rendering duplicate panel/editor tabs.
+		let instance = this._terminalGroupService.instances.find(instance => {
+			const candidate = instance.shellLaunchConfig.attachPersistentProcess;
+			return instance.persistentProcessId === deserializedInput.id ||
+				candidate?.id === deserializedInput.id ||
+				(!!candidate?.pid && candidate.pid === deserializedInput.pid) ||
+				(!!candidate?.shellIntegrationNonce && candidate.shellIntegrationNonce === deserializedInput.shellIntegrationNonce);
+		});
+		let removeLatePanelPlacement = false;
+		if (instance) {
+			this._terminalGroupService.getGroupForInstance(instance)?.removeInstance(instance);
+		} else {
+			const newDeserializedInput = { ...deserializedInput, findRevivedId: true };
+			instance = this._terminalInstanceService.createInstance({ attachPersistentProcess: newDeserializedInput }, TerminalLocation.Editor);
+			// createInstance can synchronously return a panel revival claim that has
+			// not been published into a group yet. Only that case needs a listener;
+			// a newly created editor must remain freely movable after startup.
+			removeLatePanelPlacement = instance.target === TerminalLocation.Panel;
+		}
+		instance.target = TerminalLocation.Editor;
+		if (removeLatePanelPlacement) {
+			// A panel group may publish a synchronously-created revival instance only
+			// after this editor input has claimed it. Remove that late placement once.
+			let panelPlacementListener: IDisposable | undefined;
+			panelPlacementListener = this._terminalGroupService.onDidChangeGroups(() => {
+				const group = this._terminalGroupService.getGroupForInstance(instance);
+				if (group) {
+					group.removeInstance(instance);
+					panelPlacementListener?.dispose();
+				}
+			});
+		}
 		const input = this._instantiationService.createInstance(TerminalEditorInput, instance.resource, instance);
 		this._registerInstance(instance.resource.path, input, instance);
 		return input;
