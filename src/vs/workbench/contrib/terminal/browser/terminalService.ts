@@ -492,6 +492,11 @@ export class TerminalService extends Disposable implements ITerminalService {
 		// now that terminals have been restored,
 		// attach listeners to update local state when terminals are changed
 		this._attachProcessLayoutListeners();
+		// Rewrite the revived topology once arbitration between terminal editors
+		// and panel groups has completed. This removes stale duplicate claims from
+		// durable layout state even when they were discarded before listeners were
+		// attached.
+		this._saveState();
 
 		this._logService.trace('Reconnected to local terminals');
 	}
@@ -539,6 +544,19 @@ export class TerminalService extends Disposable implements ITerminalService {
 		let lastInstance: Promise<ITerminalInstance> | undefined;
 		for (const terminalLayout of terminalLayouts) {
 			const attachPersistentProcess = terminalLayout.terminal!;
+			// Editor and panel restoration run concurrently. If the editor claim won
+			// the race, do not create a second panel instance for the same PTY. The
+			// inverse ordering is handled by TerminalEditorService.reviveInput, which
+			// transfers an already-created panel instance into the editor.
+			if (this._terminalEditorService.instances.some(instance => {
+				const candidate = instance.shellLaunchConfig.attachPersistentProcess;
+				return instance.persistentProcessId === attachPersistentProcess.id ||
+					candidate?.id === attachPersistentProcess.id ||
+					(!!candidate?.pid && candidate.pid === attachPersistentProcess.pid) ||
+					(!!candidate?.shellIntegrationNonce && candidate.shellIntegrationNonce === attachPersistentProcess.shellIntegrationNonce);
+			})) {
+				continue;
+			}
 			if (this._lifecycleService.startupKind !== StartupKind.ReloadedWindow && attachPersistentProcess.type === 'Task') {
 				continue;
 			}
@@ -547,7 +565,16 @@ export class TerminalService extends Disposable implements ITerminalService {
 				config: { attachPersistentProcess },
 				location: lastInstance ? { parentTerminal: lastInstance } : TerminalLocation.Panel
 			});
-			lastInstance.then(() => mark(`code/terminal/didRecreateTerminal/${attachPersistentProcess.id}-${attachPersistentProcess.pid}`));
+			lastInstance.then(instance => {
+				// The editor restorer may claim a synchronously deduplicated instance
+				// while createTerminal is still publishing its panel group. Resolve that
+				// ordering after publication, when the owning group can be removed safely.
+				if (instance.target === TerminalLocation.Editor) {
+					this._terminalGroupService.getGroupForInstance(instance)?.removeInstance(instance);
+					this._saveState();
+				}
+				mark(`code/terminal/didRecreateTerminal/${attachPersistentProcess.id}-${attachPersistentProcess.pid}`);
+			});
 		}
 		const group = lastInstance?.then(instance => {
 			const g = this._terminalGroupService.getGroupForInstance(instance);
@@ -561,6 +588,7 @@ export class TerminalService extends Disposable implements ITerminalService {
 		this._register(this.onDidChangeActiveGroup(() => this._saveState()));
 		this._register(this.onDidChangeActiveInstance(() => this._saveState()));
 		this._register(this.onDidChangeInstances(() => this._saveTopologyState()));
+		this._register(this._terminalEditorService.onDidChangeInstances(() => this._saveTopologyState()));
 		// The state must be updated when the terminal is relaunched, otherwise the persistent
 		// terminal ID will be stale and the process will be leaked.
 		this._register(this.onAnyInstanceProcessIdReady(() => this._saveTopologyState()));
