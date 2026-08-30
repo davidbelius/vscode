@@ -20,6 +20,7 @@ import { IContextKey, IContextKeyService } from '../../../../platform/contextkey
 import { IDialogService } from '../../../../platform/dialogs/common/dialogs.js';
 import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
 import { INotificationService } from '../../../../platform/notification/common/notification.js';
+import { IStorageService } from '../../../../platform/storage/common/storage.js';
 import { ICreateContributedTerminalProfileOptions, IExtensionTerminalProfile, IPtyHostAttachTarget, IRawTerminalInstanceLayoutInfo, IRawTerminalTabLayoutInfo, IShellLaunchConfig, ITerminalBackend, ITerminalLaunchError, ITerminalLogService, ITerminalsLayoutInfo, ITerminalsLayoutInfoById, TerminalExitReason, TerminalLocation, TerminalSettingId, TitleEventSource } from '../../../../platform/terminal/common/terminal.js';
 import { formatMessageForTerminal } from '../../../../platform/terminal/common/terminalStrings.js';
 import { iconForeground } from '../../../../platform/theme/common/colorRegistry.js';
@@ -187,7 +188,8 @@ export class TerminalService extends Disposable implements ITerminalService {
 		@ICommandService private readonly _commandService: ICommandService,
 		@IKeybindingService private readonly _keybindingService: IKeybindingService,
 		@ITimerService private readonly _timerService: ITimerService,
-		@IThemeService private readonly _themeService: IThemeService
+		@IThemeService private readonly _themeService: IThemeService,
+		@IStorageService private readonly _storageService: IStorageService
 	) {
 		super();
 
@@ -558,10 +560,10 @@ export class TerminalService extends Disposable implements ITerminalService {
 	private _attachProcessLayoutListeners(): void {
 		this._register(this.onDidChangeActiveGroup(() => this._saveState()));
 		this._register(this.onDidChangeActiveInstance(() => this._saveState()));
-		this._register(this.onDidChangeInstances(() => this._saveState()));
+		this._register(this.onDidChangeInstances(() => this._saveTopologyState()));
 		// The state must be updated when the terminal is relaunched, otherwise the persistent
 		// terminal ID will be stale and the process will be leaked.
-		this._register(this.onAnyInstanceProcessIdReady(() => this._saveState()));
+		this._register(this.onAnyInstanceProcessIdReady(() => this._saveTopologyState()));
 		this._register(this.onAnyInstanceTitleChange(instance => this._updateTitle(instance)));
 		this._register(this.onAnyInstanceIconChange(e => this._updateIcon(e.instance, e.userInitiated)));
 	}
@@ -722,6 +724,15 @@ export class TerminalService extends Disposable implements ITerminalService {
 
 	@debounce(500)
 	private _saveState(): void {
+		void this._saveStateNow();
+	}
+
+	@debounce(500)
+	private _saveTopologyState(): void {
+		void this._saveStateNow(true);
+	}
+
+	private async _saveStateNow(persistTerminalState: boolean = false): Promise<void> {
 		// Avoid saving state when shutting down as that would override process state to be revived
 		if (this._isShuttingDown) {
 			return;
@@ -729,9 +740,15 @@ export class TerminalService extends Disposable implements ITerminalService {
 		if (!this._terminalConfigurationService.config.enablePersistentSessions) {
 			return;
 		}
+		if (persistTerminalState) {
+			await this._primaryBackend?.persistTerminalState();
+		}
 		const tabs = this._terminalGroupService.groups.map(g => g.getLayoutInfo(g === this._terminalGroupService.activeGroup));
 		const state: ITerminalsLayoutInfoById = { tabs, background: this._backgroundedTerminalInstances.map(bg => bg.instance).filter(i => i.shellLaunchConfig.forcePersist).map(i => i.persistentProcessId).filter((e): e is number => e !== undefined) };
-		this._primaryBackend?.setTerminalLayoutInfo(state);
+		await this._primaryBackend?.setTerminalLayoutInfo(state);
+		if (persistTerminalState) {
+			await this._storageService.flush();
+		}
 	}
 
 	@debounce(500)
