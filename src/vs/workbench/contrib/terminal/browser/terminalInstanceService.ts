@@ -22,6 +22,7 @@ export class TerminalInstanceService extends Disposable implements ITerminalInst
 	declare _serviceBrand: undefined;
 	private _terminalShellTypeContextKey: IContextKey<string>;
 	private _backendRegistration = new Map<string | undefined, { promise: Promise<void>; resolve: () => void }>();
+	private readonly _persistentRevivalInstances: ITerminalInstance[] = [];
 
 	private readonly _onDidCreateInstance = this._register(new Emitter<ITerminalInstance>());
 	get onDidCreateInstance(): Event<ITerminalInstance> { return this._onDidCreateInstance.event; }
@@ -47,8 +48,32 @@ export class TerminalInstanceService extends Disposable implements ITerminalInst
 	createInstance(shellLaunchConfig: IShellLaunchConfig, target: TerminalLocation): ITerminalInstance;
 	createInstance(config: IShellLaunchConfig | ITerminalProfile, target: TerminalLocation): ITerminalInstance {
 		const shellLaunchConfig = this.convertProfileToShellLaunchConfig(config);
+		const attach = shellLaunchConfig.attachPersistentProcess;
+		if (attach?.findRevivedId) {
+			const existing = this._persistentRevivalInstances.find(instance => {
+				if (instance.isDisposed) {
+					return false;
+				}
+				const candidate = instance.shellLaunchConfig.attachPersistentProcess;
+				return candidate?.id === attach.id ||
+					(!!candidate?.pid && candidate.pid === attach.pid) ||
+					(!!candidate?.shellIntegrationNonce && candidate.shellIntegrationNonce === attach.shellIntegrationNonce);
+			});
+			if (existing) {
+				return existing;
+			}
+		}
 		const instance = this._instantiationService.createInstance(TerminalInstance, this._terminalShellTypeContextKey, shellLaunchConfig);
 		instance.target = target;
+		if (attach?.findRevivedId) {
+			this._persistentRevivalInstances.push(instance);
+			Event.once(instance.onDisposed)(() => {
+				const index = this._persistentRevivalInstances.indexOf(instance);
+				if (index !== -1) {
+					this._persistentRevivalInstances.splice(index, 1);
+				}
+			});
+		}
 		this._onDidCreateInstance.fire(instance);
 		return instance;
 	}
