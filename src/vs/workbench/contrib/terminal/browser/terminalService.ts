@@ -803,7 +803,7 @@ export class TerminalService extends Disposable implements ITerminalService {
 		return this.instances.some(term => term.processId === remoteTerm.pid);
 	}
 
-	moveToEditor(source: ITerminalInstance, group?: GroupIdentifier | SIDE_GROUP_TYPE | ACTIVE_GROUP_TYPE | AUX_WINDOW_GROUP_TYPE): void {
+	async moveToEditor(source: ITerminalInstance, group?: GroupIdentifier | SIDE_GROUP_TYPE | ACTIVE_GROUP_TYPE | AUX_WINDOW_GROUP_TYPE): Promise<void> {
 		if (source.target === TerminalLocation.Editor) {
 			return;
 		}
@@ -812,12 +812,20 @@ export class TerminalService extends Disposable implements ITerminalService {
 			return;
 		}
 		sourceGroup.removeInstance(source);
-		this._terminalEditorService.openEditor(source, group ? { viewColumn: group } : undefined);
+
+		// Remove the old panel location durably before publishing the terminal as an
+		// editor. This is the inverse of the ordered editor-to-panel handoff below
+		// and prevents a restart from reviving the same process in both locations.
+		await this._saveStateNow();
+		await this._storageService.flush();
+
+		await this._terminalEditorService.openEditor(source, group ? { viewColumn: group } : undefined);
+		await this._storageService.flush();
 
 	}
 
-	moveIntoNewEditor(source: ITerminalInstance): void {
-		this.moveToEditor(source, AUX_WINDOW_GROUP);
+	async moveIntoNewEditor(source: ITerminalInstance): Promise<void> {
+		await this.moveToEditor(source, AUX_WINDOW_GROUP);
 	}
 
 	async moveToTerminalView(source?: ITerminalInstance | URI, target?: ITerminalInstance, side?: 'before' | 'after'): Promise<void> {
