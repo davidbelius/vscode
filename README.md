@@ -5,6 +5,8 @@
 > regression tests. They are experimental, AI-assisted changes for personal
 > testing and independent review; they are not official Microsoft fixes or
 > confirmation of a VS Code defect.
+> See [the apparent-bug report](VIBE_CODED_TERMINAL_RESTORATION_BUGS.md) and
+> [the related GitHub-issue comparisons](VIBE_CODED_GITHUB_ISSUE_COMPARISONS.md).
 [![Feature Requests](https://img.shields.io/github/issues/microsoft/vscode/feature-request.svg)](https://github.com/microsoft/vscode/issues?q=is%3Aopen+is%3Aissue+label%3Afeature-request+sort%3Areactions-%2B1-desc)
 [![Bugs](https://img.shields.io/github/issues/microsoft/vscode/bug.svg)](https://github.com/microsoft/vscode/issues?utf8=✓&q=is%3Aissue+is%3Aopen+label%3Abug)
 
