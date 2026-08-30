@@ -20,6 +20,7 @@ import { IContextKey, IContextKeyService } from '../../../../platform/contextkey
 import { IDialogService } from '../../../../platform/dialogs/common/dialogs.js';
 import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
 import { INotificationService } from '../../../../platform/notification/common/notification.js';
+import { IStorageService } from '../../../../platform/storage/common/storage.js';
 import { ICreateContributedTerminalProfileOptions, IExtensionTerminalProfile, IPtyHostAttachTarget, IRawTerminalInstanceLayoutInfo, IRawTerminalTabLayoutInfo, IShellLaunchConfig, ITerminalBackend, ITerminalLaunchError, ITerminalLogService, ITerminalsLayoutInfo, ITerminalsLayoutInfoById, TerminalExitReason, TerminalLocation, TerminalSettingId, TitleEventSource } from '../../../../platform/terminal/common/terminal.js';
 import { formatMessageForTerminal } from '../../../../platform/terminal/common/terminalStrings.js';
 import { iconForeground } from '../../../../platform/theme/common/colorRegistry.js';
@@ -187,7 +188,8 @@ export class TerminalService extends Disposable implements ITerminalService {
 		@ICommandService private readonly _commandService: ICommandService,
 		@IKeybindingService private readonly _keybindingService: IKeybindingService,
 		@ITimerService private readonly _timerService: ITimerService,
-		@IThemeService private readonly _themeService: IThemeService
+		@IThemeService private readonly _themeService: IThemeService,
+		@IStorageService private readonly _storageService: IStorageService
 	) {
 		super();
 
@@ -722,6 +724,10 @@ export class TerminalService extends Disposable implements ITerminalService {
 
 	@debounce(500)
 	private _saveState(): void {
+		void this._saveStateNow();
+	}
+
+	private async _saveStateNow(): Promise<void> {
 		// Avoid saving state when shutting down as that would override process state to be revived
 		if (this._isShuttingDown) {
 			return;
@@ -731,7 +737,7 @@ export class TerminalService extends Disposable implements ITerminalService {
 		}
 		const tabs = this._terminalGroupService.groups.map(g => g.getLayoutInfo(g === this._terminalGroupService.activeGroup));
 		const state: ITerminalsLayoutInfoById = { tabs, background: this._backgroundedTerminalInstances.map(bg => bg.instance).filter(i => i.shellLaunchConfig.forcePersist).map(i => i.persistentProcessId).filter((e): e is number => e !== undefined) };
-		this._primaryBackend?.setTerminalLayoutInfo(state);
+		await this._primaryBackend?.setTerminalLayoutInfo(state);
 	}
 
 	@debounce(500)
@@ -829,6 +835,15 @@ export class TerminalService extends Disposable implements ITerminalService {
 			await this._terminalGroupService.showPanel(true);
 			return;
 		}
+
+		// Disposing a terminal editor closes it through EditorGroupView's deferred
+		// disposed editor worker. Wait for that to update the editor model and flush
+		// the editor memento before publishing the terminal in the panel layout. This
+		// ordering ensures an abrupt shutdown cannot persist the process in both
+		// locations.
+		await timeout(0);
+		await this._storageService.flush();
+
 		source.target = TerminalLocation.Panel;
 
 		let group: ITerminalGroup | undefined;
@@ -852,6 +867,12 @@ export class TerminalService extends Disposable implements ITerminalService {
 		// Fire events
 		this._onDidChangeInstances.fire();
 		this._onDidChangeActiveGroup.fire(this._terminalGroupService.activeGroup);
+
+		// Bypass the regular 500 ms debounce for this location handoff and ensure
+		// the new panel location has reached both the pty host and workspace storage
+		// before resolving the move command.
+		await this._saveStateNow();
+		await this._storageService.flush();
 	}
 
 	protected _initInstanceListeners(instance: ITerminalInstance): void {
