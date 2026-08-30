@@ -1,4 +1,10 @@
 # Visual Studio Code - Open Source ("Code - OSS")
+
+> **Fork status:** The terminal-restoration branches in this fork contain
+> vibe-coded bug fixes for apparent VS Code bugs, together with vibe-coded
+> regression tests. They are experimental, AI-assisted changes for personal
+> testing and independent review; they are not official Microsoft fixes or
+> confirmation of a VS Code defect.
 [![Feature Requests](https://img.shields.io/github/issues/microsoft/vscode/feature-request.svg)](https://github.com/microsoft/vscode/issues?q=is%3Aopen+is%3Aissue+label%3Afeature-request+sort%3Areactions-%2B1-desc)
 [![Bugs](https://img.shields.io/github/issues/microsoft/vscode/bug.svg)](https://github.com/microsoft/vscode/issues?utf8=✓&q=is%3Aissue+is%3Aopen+label%3Abug)
 
