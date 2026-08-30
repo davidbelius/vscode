@@ -20,6 +20,7 @@ import { IContextKey, IContextKeyService } from '../../../../platform/contextkey
 import { IDialogService } from '../../../../platform/dialogs/common/dialogs.js';
 import { IInstantiationService } from '../../../../platform/instantiation/common/instantiation.js';
 import { INotificationService } from '../../../../platform/notification/common/notification.js';
+import { IStorageService } from '../../../../platform/storage/common/storage.js';
 import { ICreateContributedTerminalProfileOptions, IExtensionTerminalProfile, IPtyHostAttachTarget, IRawTerminalInstanceLayoutInfo, IRawTerminalTabLayoutInfo, IShellLaunchConfig, ITerminalBackend, ITerminalLaunchError, ITerminalLogService, ITerminalsLayoutInfo, ITerminalsLayoutInfoById, TerminalExitReason, TerminalLocation, TerminalSettingId, TitleEventSource } from '../../../../platform/terminal/common/terminal.js';
 import { formatMessageForTerminal } from '../../../../platform/terminal/common/terminalStrings.js';
 import { iconForeground } from '../../../../platform/theme/common/colorRegistry.js';
@@ -187,7 +188,8 @@ export class TerminalService extends Disposable implements ITerminalService {
 		@ICommandService private readonly _commandService: ICommandService,
 		@IKeybindingService private readonly _keybindingService: IKeybindingService,
 		@ITimerService private readonly _timerService: ITimerService,
-		@IThemeService private readonly _themeService: IThemeService
+		@IThemeService private readonly _themeService: IThemeService,
+		@IStorageService private readonly _storageService: IStorageService
 	) {
 		super();
 
@@ -722,6 +724,10 @@ export class TerminalService extends Disposable implements ITerminalService {
 
 	@debounce(500)
 	private _saveState(): void {
+		void this._saveStateNow();
+	}
+
+	private async _saveStateNow(): Promise<void> {
 		// Avoid saving state when shutting down as that would override process state to be revived
 		if (this._isShuttingDown) {
 			return;
@@ -731,7 +737,7 @@ export class TerminalService extends Disposable implements ITerminalService {
 		}
 		const tabs = this._terminalGroupService.groups.map(g => g.getLayoutInfo(g === this._terminalGroupService.activeGroup));
 		const state: ITerminalsLayoutInfoById = { tabs, background: this._backgroundedTerminalInstances.map(bg => bg.instance).filter(i => i.shellLaunchConfig.forcePersist).map(i => i.persistentProcessId).filter((e): e is number => e !== undefined) };
-		this._primaryBackend?.setTerminalLayoutInfo(state);
+		await this._primaryBackend?.setTerminalLayoutInfo(state);
 	}
 
 	@debounce(500)
@@ -797,7 +803,7 @@ export class TerminalService extends Disposable implements ITerminalService {
 		return this.instances.some(term => term.processId === remoteTerm.pid);
 	}
 
-	moveToEditor(source: ITerminalInstance, group?: GroupIdentifier | SIDE_GROUP_TYPE | ACTIVE_GROUP_TYPE | AUX_WINDOW_GROUP_TYPE): void {
+	async moveToEditor(source: ITerminalInstance, group?: GroupIdentifier | SIDE_GROUP_TYPE | ACTIVE_GROUP_TYPE | AUX_WINDOW_GROUP_TYPE): Promise<void> {
 		if (source.target === TerminalLocation.Editor) {
 			return;
 		}
@@ -806,12 +812,20 @@ export class TerminalService extends Disposable implements ITerminalService {
 			return;
 		}
 		sourceGroup.removeInstance(source);
-		this._terminalEditorService.openEditor(source, group ? { viewColumn: group } : undefined);
+
+		// Remove the old panel location durably before publishing the terminal as an
+		// editor. This is the inverse of the ordered editor-to-panel handoff below
+		// and prevents a restart from reviving the same process in both locations.
+		await this._saveStateNow();
+		await this._storageService.flush();
+
+		await this._terminalEditorService.openEditor(source, group ? { viewColumn: group } : undefined);
+		await this._storageService.flush();
 
 	}
 
-	moveIntoNewEditor(source: ITerminalInstance): void {
-		this.moveToEditor(source, AUX_WINDOW_GROUP);
+	async moveIntoNewEditor(source: ITerminalInstance): Promise<void> {
+		await this.moveToEditor(source, AUX_WINDOW_GROUP);
 	}
 
 	async moveToTerminalView(source?: ITerminalInstance | URI, target?: ITerminalInstance, side?: 'before' | 'after'): Promise<void> {

@@ -603,8 +603,8 @@ export interface ITerminalService extends ITerminalInstanceHost {
 	 */
 	moveToBackground(instance: ITerminalInstance): void;
 	revealActiveTerminal(preserveFocus?: boolean): Promise<void>;
-	moveToEditor(source: ITerminalInstance, group?: GroupIdentifier | SIDE_GROUP_TYPE | ACTIVE_GROUP_TYPE | AUX_WINDOW_GROUP_TYPE): void;
-	moveIntoNewEditor(source: ITerminalInstance): void;
+	moveToEditor(source: ITerminalInstance, group?: GroupIdentifier | SIDE_GROUP_TYPE | ACTIVE_GROUP_TYPE | AUX_WINDOW_GROUP_TYPE): Promise<void>;
+	moveIntoNewEditor(source: ITerminalInstance): Promise<void>;
 	moveToTerminalView(source: ITerminalInstance | URI): Promise<void>;
 	getPrimaryBackend(): ITerminalBackend | undefined;
 	setNextCommandId(id: number, commandLine: string, commandId: string): Promise<void>;
