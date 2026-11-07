@@ -550,6 +550,12 @@ export class TerminalInstance extends Disposable implements ITerminalInstance {
 		this._initDimensions();
 		this._processManager = this._createProcessManager();
 
+		// Restore custom titles before starting the process: failed attachment clears its metadata,
+		// and restoring asynchronously could overwrite a newer rename or reset.
+		if (this._shellLaunchConfig.attachPersistentProcess?.titleSource === TitleEventSource.Api) {
+			this._setTitle(this._shellLaunchConfig.attachPersistentProcess.title, TitleEventSource.Api);
+		}
+
 		this._containerReadyBarrier = new AutoOpenBarrier(Constants.WaitForContainerThreshold);
 		this._attachBarrier = new AutoOpenBarrier(1000);
 		this._register(toDisposable(() => {
@@ -593,7 +599,9 @@ export class TerminalInstance extends Disposable implements ITerminalInstance {
 			// Re-establish the title after reconnect
 			if (this.shellLaunchConfig.attachPersistentProcess) {
 				this._cwd = this.shellLaunchConfig.attachPersistentProcess.cwd;
-				this._setTitle(this.shellLaunchConfig.attachPersistentProcess.title, this.shellLaunchConfig.attachPersistentProcess.titleSource);
+				if (this.shellLaunchConfig.attachPersistentProcess.titleSource !== TitleEventSource.Api) {
+					this._setTitle(this.shellLaunchConfig.attachPersistentProcess.title, this.shellLaunchConfig.attachPersistentProcess.titleSource);
+				}
 				this.setShellType(this.shellType);
 			}
 
@@ -1552,7 +1560,8 @@ export class TerminalInstance extends Disposable implements ITerminalInstance {
 				// _xtermReadyPromise is ready constructed since this is called from the ctor
 				setTimeout(() => {
 					this._xtermReadyPromise.then(xterm => {
-						if (xterm) {
+						// A restored or recently renamed terminal may already have a custom title.
+						if (xterm && this._staticTitle === undefined) {
 							this._messageTitleDisposable.value = xterm.raw.onTitleChange(e => this._onTitleChange(e));
 						}
 					});
@@ -2217,7 +2226,10 @@ export class TerminalInstance extends Disposable implements ITerminalInstance {
 				}
 				break;
 		}
-		this._titleSource = eventSource;
+		// Configuration changes refresh the label without changing where the title came from.
+		if (eventSource !== TitleEventSource.Config) {
+			this._titleSource = eventSource;
+		}
 		return title;
 	}
 
