@@ -30,7 +30,9 @@ import { IWorkspaceContextService, IWorkspaceFolder } from '../../../../../platf
 import { IWorkspaceTrustRequestService } from '../../../../../platform/workspace/common/workspaceTrust.js';
 import { Workspace } from '../../../../../platform/workspace/test/common/testWorkspace.js';
 import { IViewDescriptorService } from '../../../../common/views.js';
-import { ITerminalConfigurationService, ITerminalInstance, ITerminalInstanceService, ITerminalService } from '../../browser/terminal.js';
+import { ISerializedTerminalEditorInput, ITerminalConfigurationService, ITerminalEditorService, ITerminalInstance, ITerminalInstanceService, ITerminalService } from '../../browser/terminal.js';
+import { TerminalEditorInput } from '../../browser/terminalEditorInput.js';
+import { TerminalInputSerializer } from '../../browser/terminalEditorSerializer.js';
 import { TerminalConfigurationService } from '../../browser/terminalConfigurationService.js';
 import { parseExitResult, TerminalInstance, TerminalLabelComputer } from '../../browser/terminalInstance.js';
 import { TerminalIconPicker } from '../../browser/terminalIconPicker.js';
@@ -563,6 +565,89 @@ suite('Workbench - TerminalInstance', () => {
 					title: expectedTitle
 				});
 			});
+		}
+
+		for (const reattach of [true, false]) {
+			for (const titleKind of ['custom', 'cleared', 'process'] as const) {
+				test(`repeated terminal editor restoration preserves ${titleKind} title after shell OSC when attachment ${reattach ? 'succeeds' : 'fails'}`, async () => {
+					const sandbox = createSandbox();
+					store.add(toDisposable(() => sandbox.restore()));
+					const terminalInstanceService = store.add(new TestTerminalInstanceService());
+					const backend = await terminalInstanceService.getBackend();
+					const createChild = () => {
+						const child = store.add(new TestTerminalChildProcess(true));
+						const ready = store.add(new Emitter<IProcessReadyEvent>());
+						child.onProcessReady = ready.event;
+						const propertyChanged = store.add(new Emitter<IProcessProperty>());
+						child.onDidChangeProperty = propertyChanged.event;
+						sandbox.stub(child, 'start').callsFake(async () => {
+							propertyChanged.fire({ type: ProcessPropertyType.InitialCwd, value: '/test' });
+							ready.fire({ pid: 1234, cwd: '/test', windowsPty: undefined });
+							return undefined;
+						});
+						return child;
+					};
+					sandbox.stub(terminalInstanceService, 'getBackend').resolves({
+						...backend,
+						attachToRevivedProcess: async () => reattach ? createChild() : undefined,
+						createProcess: async () => createChild()
+					});
+					const instance = await createTerminalInstance(terminalInstanceService, undefined, {
+						attachPersistentProcess: {
+							id: 42, pid: 5678, findRevivedId: true,
+							title: titleKind === 'process' ? 'node' : 'build-server',
+							titleSource: titleKind === 'process' ? TitleEventSource.Process : TitleEventSource.Api,
+							cwd: '', shellIntegrationNonce: ''
+						}
+					});
+					instance.target = TerminalLocation.Editor;
+					await instance.processReady;
+					// Let the process-ready continuation install its xterm title listener.
+					await timeout(0);
+					if (titleKind === 'cleared') {
+						await instance.rename('');
+					}
+					await instance.rename('bash', TitleEventSource.Process);
+					await writeP(instance.xterm!.raw, '\x1b]0;shell-title\x07');
+					const afterOsc = { title: instance.title, titleSource: instance.titleSource, staticTitle: instance.staticTitle };
+
+					const instantiationService = createTerminalInstantiationService(terminalInstanceService);
+					const editor = store.add(instantiationService.createInstance(TerminalEditorInput, instance.resource, instance));
+					const serializer = new TerminalInputSerializer(upcastPartial<ITerminalEditorService>({}));
+					const serialized = serializer.serialize(editor);
+					ok(serialized, 'The restored editor must be eligible for persistence');
+					const saved = JSON.parse(serialized) as ISerializedTerminalEditorInput;
+					// Match TerminalEditorService.reviveInput's shell launch configuration.
+					const restored = await createTerminalInstance(terminalInstanceService, undefined, {
+						attachPersistentProcess: { ...saved, findRevivedId: true }
+					});
+					restored.target = TerminalLocation.Editor;
+					await restored.processReady;
+					await timeout(0);
+					await restored.rename('next-process', TitleEventSource.Process);
+
+					deepStrictEqual({
+						afterOsc,
+						saved: { title: saved.title, titleSource: saved.titleSource },
+						afterSecondRestore: { title: restored.title, titleSource: restored.titleSource, staticTitle: restored.staticTitle }
+					}, {
+						afterOsc: {
+							title: titleKind === 'custom' ? 'build-server' : 'bash',
+							titleSource: titleKind === 'custom' ? TitleEventSource.Api : TitleEventSource.Sequence,
+							staticTitle: titleKind === 'custom' ? 'build-server' : undefined
+						},
+						saved: {
+							title: titleKind === 'custom' ? 'build-server' : 'bash',
+							titleSource: titleKind === 'custom' ? TitleEventSource.Api : TitleEventSource.Sequence
+						},
+						afterSecondRestore: {
+							title: titleKind === 'custom' ? 'build-server' : 'next-process',
+							titleSource: titleKind === 'custom' ? TitleEventSource.Api : TitleEventSource.Process,
+							staticTitle: titleKind === 'custom' ? 'build-server' : undefined
+						}
+					});
+				});
+			}
 		}
 
 		test('should only load the line data event addon once when listeners are re-added', async () => {
