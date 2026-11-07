@@ -1,0 +1,634 @@
+{
+  "local-names-before": {
+    "groups": [
+      {
+        "rect": {
+          "x": 353,
+          "y": 36,
+          "w": 541,
+          "h": 535
+        },
+        "tabs": [
+          {
+            "name": "gamma.txt",
+            "text": "gamma.txt",
+            "selected": "false"
+          },
+          {
+            "name": "alpha.txt",
+            "text": "alpha.txt",
+            "selected": "false"
+          },
+          {
+            "name": "beta.txt",
+            "text": "beta.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 36,
+          "w": 541,
+          "h": 267
+        },
+        "tabs": [
+          {
+            "name": "beta.txt",
+            "text": "beta.txt",
+            "selected": "false"
+          },
+          {
+            "name": "alpha.txt, preview",
+            "text": "alpha.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 303,
+          "w": 541,
+          "h": 268
+        },
+        "tabs": [
+          {
+            "name": "alpha.txt, Editor Group 3",
+            "text": "alpha.txt",
+            "selected": "false"
+          },
+          {
+            "name": "gamma.txt, preview, Editor Group 3",
+            "text": "gamma.txt",
+            "selected": "false"
+          },
+          {
+            "name": "local-server-D, Editor Group 3",
+            "text": "local-server-D",
+            "selected": "true"
+          }
+        ]
+      }
+    ],
+    "panelTerminals": [
+      "\u250c  local-build-A",
+      "\u2514  bash",
+      " bash"
+    ]
+  },
+  "local-names-reload": {
+    "groups": [
+      {
+        "rect": {
+          "x": 353,
+          "y": 36,
+          "w": 541,
+          "h": 535
+        },
+        "tabs": [
+          {
+            "name": "gamma.txt",
+            "text": "gamma.txt",
+            "selected": "false"
+          },
+          {
+            "name": "alpha.txt",
+            "text": "alpha.txt",
+            "selected": "false"
+          },
+          {
+            "name": "beta.txt",
+            "text": "beta.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 36,
+          "w": 541,
+          "h": 267
+        },
+        "tabs": [
+          {
+            "name": "beta.txt",
+            "text": "beta.txt",
+            "selected": "false"
+          },
+          {
+            "name": "alpha.txt, preview",
+            "text": "alpha.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 303,
+          "w": 541,
+          "h": 268
+        },
+        "tabs": [
+          {
+            "name": "alpha.txt, Editor Group 3",
+            "text": "alpha.txt",
+            "selected": "false"
+          },
+          {
+            "name": "gamma.txt, preview, Editor Group 3",
+            "text": "gamma.txt",
+            "selected": "false"
+          },
+          {
+            "name": "local-server-D, Editor Group 3",
+            "text": "local-server-D",
+            "selected": "true"
+          }
+        ]
+      }
+    ],
+    "panelTerminals": [
+      "\u250c  local-build-A",
+      "\u2514  bash",
+      " bash"
+    ]
+  },
+  "local-names-reopen": {
+    "groups": [
+      {
+        "rect": {
+          "x": 353,
+          "y": 36,
+          "w": 541,
+          "h": 535
+        },
+        "tabs": [
+          {
+            "name": "gamma.txt",
+            "text": "gamma.txt",
+            "selected": "false"
+          },
+          {
+            "name": "alpha.txt",
+            "text": "alpha.txt",
+            "selected": "false"
+          },
+          {
+            "name": "beta.txt",
+            "text": "beta.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 36,
+          "w": 541,
+          "h": 267
+        },
+        "tabs": [
+          {
+            "name": "beta.txt",
+            "text": "beta.txt",
+            "selected": "false"
+          },
+          {
+            "name": "alpha.txt, preview",
+            "text": "alpha.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 303,
+          "w": 541,
+          "h": 268
+        },
+        "tabs": [
+          {
+            "name": "alpha.txt, Editor Group 3",
+            "text": "alpha.txt",
+            "selected": "false"
+          },
+          {
+            "name": "gamma.txt, preview, Editor Group 3",
+            "text": "gamma.txt",
+            "selected": "false"
+          },
+          {
+            "name": "bash, Editor Group 3",
+            "text": "bash",
+            "selected": "true"
+          }
+        ]
+      }
+    ],
+    "panelTerminals": [
+      "\u250c  local-build-A",
+      "\u2514  bash",
+      " bash"
+    ]
+  },
+  "remote-names-before": {
+    "groups": [
+      {
+        "rect": {
+          "x": 353,
+          "y": 36,
+          "w": 541,
+          "h": 535
+        },
+        "tabs": [
+          {
+            "name": "gamma.txt, Editor Group 1",
+            "text": "gamma.txt",
+            "selected": "false"
+          },
+          {
+            "name": "alpha.txt, Editor Group 1",
+            "text": "alpha.txt",
+            "selected": "false"
+          },
+          {
+            "name": "beta.txt, Editor Group 1",
+            "text": "beta.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 36,
+          "w": 541,
+          "h": 267
+        },
+        "tabs": [
+          {
+            "name": "beta.txt, Editor Group 2",
+            "text": "beta.txt",
+            "selected": "false"
+          },
+          {
+            "name": "alpha.txt, preview, Editor Group 2",
+            "text": "alpha.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 303,
+          "w": 541,
+          "h": 268
+        },
+        "tabs": [
+          {
+            "name": "alpha.txt, Editor Group 3",
+            "text": "alpha.txt",
+            "selected": "false"
+          },
+          {
+            "name": "gamma.txt, preview, Editor Group 3",
+            "text": "gamma.txt",
+            "selected": "false"
+          },
+          {
+            "name": "server-D, Editor Group 3",
+            "text": "server-D",
+            "selected": "true"
+          }
+        ]
+      }
+    ],
+    "panelTerminals": [
+      "\u250c  build-A",
+      "\u2514  tests-B",
+      " logs-C"
+    ]
+  },
+  "remote-names-reload": {
+    "groups": [
+      {
+        "rect": {
+          "x": 353,
+          "y": 36,
+          "w": 541,
+          "h": 535
+        },
+        "tabs": [
+          {
+            "name": "gamma.txt, Editor Group 1",
+            "text": "gamma.txt",
+            "selected": "false"
+          },
+          {
+            "name": "alpha.txt, Editor Group 1",
+            "text": "alpha.txt",
+            "selected": "false"
+          },
+          {
+            "name": "beta.txt, Editor Group 1",
+            "text": "beta.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 36,
+          "w": 541,
+          "h": 267
+        },
+        "tabs": [
+          {
+            "name": "beta.txt, Editor Group 2",
+            "text": "beta.txt",
+            "selected": "false"
+          },
+          {
+            "name": "alpha.txt, preview, Editor Group 2",
+            "text": "alpha.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 303,
+          "w": 541,
+          "h": 268
+        },
+        "tabs": [
+          {
+            "name": "alpha.txt, Editor Group 3",
+            "text": "alpha.txt",
+            "selected": "false"
+          },
+          {
+            "name": "gamma.txt, preview, Editor Group 3",
+            "text": "gamma.txt",
+            "selected": "false"
+          },
+          {
+            "name": "server-D, Editor Group 3",
+            "text": "server-D",
+            "selected": "true"
+          }
+        ]
+      }
+    ],
+    "panelTerminals": [
+      "\u250c  build-A",
+      "\u2514  tests-B",
+      " logs-C"
+    ]
+  },
+  "remote-names-reopen-settled": {
+    "groups": [
+      {
+        "rect": {
+          "x": 353,
+          "y": 36,
+          "w": 541,
+          "h": 535
+        },
+        "tabs": [
+          {
+            "name": "gamma.txt, Editor Group 1",
+            "text": "gamma.txt",
+            "selected": "false"
+          },
+          {
+            "name": "alpha.txt, Editor Group 1",
+            "text": "alpha.txt",
+            "selected": "false"
+          },
+          {
+            "name": "beta.txt, Editor Group 1",
+            "text": "beta.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 36,
+          "w": 541,
+          "h": 267
+        },
+        "tabs": [
+          {
+            "name": "beta.txt, Editor Group 2",
+            "text": "beta.txt",
+            "selected": "false"
+          },
+          {
+            "name": "alpha.txt, preview, Editor Group 2",
+            "text": "alpha.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 303,
+          "w": 541,
+          "h": 268
+        },
+        "tabs": [
+          {
+            "name": "alpha.txt, Editor Group 3",
+            "text": "alpha.txt",
+            "selected": "false"
+          },
+          {
+            "name": "gamma.txt, preview, Editor Group 3",
+            "text": "gamma.txt",
+            "selected": "false"
+          },
+          {
+            "name": "bash, Editor Group 3",
+            "text": "bash",
+            "selected": "true"
+          }
+        ]
+      }
+    ],
+    "panelTerminals": [
+      "\u250c  build-A",
+      "\u2514  tests-B",
+      " logs-C"
+    ]
+  },
+  "remote-names-repeat-before": {
+    "groups": [
+      {
+        "rect": {
+          "x": 353,
+          "y": 36,
+          "w": 541,
+          "h": 535
+        },
+        "tabs": [
+          {
+            "name": "gamma.txt, Editor Group 1",
+            "text": "gamma.txt",
+            "selected": "false"
+          },
+          {
+            "name": "alpha.txt, Editor Group 1",
+            "text": "alpha.txt",
+            "selected": "false"
+          },
+          {
+            "name": "beta.txt, Editor Group 1",
+            "text": "beta.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 36,
+          "w": 541,
+          "h": 267
+        },
+        "tabs": [
+          {
+            "name": "beta.txt, Editor Group 2",
+            "text": "beta.txt",
+            "selected": "false"
+          },
+          {
+            "name": "alpha.txt, preview, Editor Group 2",
+            "text": "alpha.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 303,
+          "w": 541,
+          "h": 268
+        },
+        "tabs": [
+          {
+            "name": "alpha.txt, Editor Group 3",
+            "text": "alpha.txt",
+            "selected": "false"
+          },
+          {
+            "name": "gamma.txt, preview, Editor Group 3",
+            "text": "gamma.txt",
+            "selected": "false"
+          },
+          {
+            "name": "server-D-repeat, Editor Group 3",
+            "text": "server-D-repeat",
+            "selected": "true"
+          }
+        ]
+      }
+    ],
+    "panelTerminals": [
+      "\u250c  build-A",
+      "\u2514  tests-B",
+      " logs-C"
+    ]
+  },
+  "remote-names-repeat-settled": {
+    "groups": [
+      {
+        "rect": {
+          "x": 353,
+          "y": 36,
+          "w": 541,
+          "h": 535
+        },
+        "tabs": [
+          {
+            "name": "gamma.txt, Editor Group 1",
+            "text": "gamma.txt",
+            "selected": "false"
+          },
+          {
+            "name": "alpha.txt, Editor Group 1",
+            "text": "alpha.txt",
+            "selected": "false"
+          },
+          {
+            "name": "beta.txt, Editor Group 1",
+            "text": "beta.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 36,
+          "w": 541,
+          "h": 267
+        },
+        "tabs": [
+          {
+            "name": "beta.txt, Editor Group 2",
+            "text": "beta.txt",
+            "selected": "false"
+          },
+          {
+            "name": "alpha.txt, preview, Editor Group 2",
+            "text": "alpha.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 303,
+          "w": 541,
+          "h": 268
+        },
+        "tabs": [
+          {
+            "name": "alpha.txt, Editor Group 3",
+            "text": "alpha.txt",
+            "selected": "false"
+          },
+          {
+            "name": "gamma.txt, preview, Editor Group 3",
+            "text": "gamma.txt",
+            "selected": "false"
+          },
+          {
+            "name": "bash, Editor Group 3",
+            "text": "bash",
+            "selected": "true"
+          }
+        ]
+      }
+    ],
+    "panelTerminals": [
+      "\u250c  build-A",
+      "\u2514  tests-B",
+      " logs-C"
+    ]
+  }
+}
