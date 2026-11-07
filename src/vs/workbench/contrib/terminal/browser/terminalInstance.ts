@@ -449,6 +449,11 @@ export class TerminalInstance extends Disposable implements ITerminalInstance {
 			this._shellLaunchConfig.type = this._shellLaunchConfig.attachPersistentProcess.type;
 		}
 
+		// Preserve custom names even when process attachment fails and its metadata is cleared.
+		if (this._shellLaunchConfig.attachPersistentProcess?.titleSource === TitleEventSource.Api) {
+			this._shellLaunchConfig.name ??= this._shellLaunchConfig.attachPersistentProcess.title;
+		}
+
 		if (this._shellLaunchConfig.attachPersistentProcess?.tabActions) {
 			this._shellLaunchConfig.tabActions = this._shellLaunchConfig.attachPersistentProcess.tabActions;
 		}
