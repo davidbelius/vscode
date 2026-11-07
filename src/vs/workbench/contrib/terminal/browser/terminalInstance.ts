@@ -1561,7 +1561,8 @@ export class TerminalInstance extends Disposable implements ITerminalInstance {
 				// _xtermReadyPromise is ready constructed since this is called from the ctor
 				setTimeout(() => {
 					this._xtermReadyPromise.then(xterm => {
-						if (xterm) {
+						// A restored or recently renamed terminal may already have a custom title.
+						if (xterm && this._staticTitle === undefined) {
 							this._messageTitleDisposable.value = xterm.raw.onTitleChange(e => this._onTitleChange(e));
 						}
 					});
