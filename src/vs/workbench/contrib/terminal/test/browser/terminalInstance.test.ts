@@ -467,12 +467,16 @@ suite('Workbench - TerminalInstance', () => {
 			strictEqual(taskTerminal.title, 'Test Task Name', 'Task terminal should preserve API-set title');
 		});
 
-		for (const { titleSource, title, reattach, expectedTitle } of [
-			{ titleSource: TitleEventSource.Api, title: 'build-server', reattach: true, expectedTitle: 'build-server' },
-			{ titleSource: TitleEventSource.Api, title: 'build-server', reattach: false, expectedTitle: 'build-server' },
-			{ titleSource: TitleEventSource.Process, title: 'node', reattach: false, expectedTitle: 'bash' }
+		for (const { titleSource, title, reattach, expectedTitle, action } of [
+			{ titleSource: TitleEventSource.Api, title: 'build-server', reattach: true, expectedTitle: 'build-server', action: undefined },
+			{ titleSource: TitleEventSource.Api, title: 'build-server', reattach: false, expectedTitle: 'build-server', action: undefined },
+			{ titleSource: TitleEventSource.Process, title: 'node', reattach: false, expectedTitle: 'bash', action: undefined },
+			...([true, false].flatMap(reattach => [
+				{ titleSource: TitleEventSource.Api, title: 'build-server', reattach, expectedTitle: 'renamed-server', action: 'rename' },
+				{ titleSource: TitleEventSource.Api, title: 'build-server', reattach, expectedTitle: 'bash', action: 'clear' }
+			]))
 		]) {
-			test(`restored terminal editor ${titleSource === TitleEventSource.Api ? 'preserves custom' : 'updates process'} title when attachment ${reattach ? 'succeeds' : 'fails'}`, async () => {
+			test(`restored terminal editor ${titleSource === TitleEventSource.Api ? 'preserves custom' : 'updates process'} title when attachment ${reattach ? 'succeeds' : 'fails'}${action ? ` then ${action} and relaunch` : ''}`, async () => {
 				const sandbox = createSandbox();
 				store.add(toDisposable(() => sandbox.restore()));
 				const terminalInstanceService = store.add(new TestTerminalInstanceService());
@@ -501,6 +505,14 @@ suite('Workbench - TerminalInstance', () => {
 				await instance.processReady;
 				// Flush the constructor's continuation that restores the attached title.
 				await timeout(0);
+				if (action) {
+					await instance.rename(action === 'rename' ? 'renamed-server' : '');
+					const relaunched = Event.toPromise(instance.onProcessIdReady);
+					instance.relaunch();
+					await relaunched;
+					// Allow the process-ready handler to finish restoring the title.
+					await timeout(0);
+				}
 				// A newly launched shell reports its process title after restoration.
 				await instance.rename('bash', TitleEventSource.Process);
 
@@ -510,7 +522,7 @@ suite('Workbench - TerminalInstance', () => {
 					title: instance.title
 				}, {
 					attachedTo: [42, 5678],
-					createdProcesses: reattach ? 0 : 1,
+					createdProcesses: (reattach ? 0 : 1) + (action ? 1 : 0),
 					title: expectedTitle
 				});
 			});
