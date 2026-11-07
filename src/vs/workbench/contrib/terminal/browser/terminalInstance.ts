@@ -449,11 +449,6 @@ export class TerminalInstance extends Disposable implements ITerminalInstance {
 			this._shellLaunchConfig.type = this._shellLaunchConfig.attachPersistentProcess.type;
 		}
 
-		// Preserve custom names even when process attachment fails and its metadata is cleared.
-		if (this._shellLaunchConfig.attachPersistentProcess?.titleSource === TitleEventSource.Api) {
-			this._shellLaunchConfig.name ??= this._shellLaunchConfig.attachPersistentProcess.title;
-		}
-
 		if (this._shellLaunchConfig.attachPersistentProcess?.tabActions) {
 			this._shellLaunchConfig.tabActions = this._shellLaunchConfig.attachPersistentProcess.tabActions;
 		}
@@ -555,6 +550,12 @@ export class TerminalInstance extends Disposable implements ITerminalInstance {
 		this._initDimensions();
 		this._processManager = this._createProcessManager();
 
+		// Restore custom titles before starting the process: failed attachment clears its metadata,
+		// and restoring asynchronously could overwrite a newer rename or reset.
+		if (this._shellLaunchConfig.attachPersistentProcess?.titleSource === TitleEventSource.Api) {
+			this._setTitle(this._shellLaunchConfig.attachPersistentProcess.title, TitleEventSource.Api);
+		}
+
 		this._containerReadyBarrier = new AutoOpenBarrier(Constants.WaitForContainerThreshold);
 		this._attachBarrier = new AutoOpenBarrier(1000);
 		this._register(toDisposable(() => {
@@ -598,7 +599,9 @@ export class TerminalInstance extends Disposable implements ITerminalInstance {
 			// Re-establish the title after reconnect
 			if (this.shellLaunchConfig.attachPersistentProcess) {
 				this._cwd = this.shellLaunchConfig.attachPersistentProcess.cwd;
-				this._setTitle(this.shellLaunchConfig.attachPersistentProcess.title, this.shellLaunchConfig.attachPersistentProcess.titleSource);
+				if (this.shellLaunchConfig.attachPersistentProcess.titleSource !== TitleEventSource.Api) {
+					this._setTitle(this.shellLaunchConfig.attachPersistentProcess.title, this.shellLaunchConfig.attachPersistentProcess.titleSource);
+				}
 				this.setShellType(this.shellType);
 			}
 
@@ -2224,7 +2227,10 @@ export class TerminalInstance extends Disposable implements ITerminalInstance {
 				}
 				break;
 		}
-		this._titleSource = eventSource;
+		// Configuration changes refresh the label without changing where the title came from.
+		if (eventSource !== TitleEventSource.Config) {
+			this._titleSource = eventSource;
+		}
 		return title;
 	}
 

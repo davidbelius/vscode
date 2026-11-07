@@ -7,7 +7,7 @@ import { deepStrictEqual, ok, strictEqual } from 'assert';
 import { createSandbox, spy } from 'sinon';
 import { Dimension } from '../../../../../base/browser/dom.js';
 import { DomScrollableElement } from '../../../../../base/browser/ui/scrollbar/scrollableElement.js';
-import { AutoOpenBarrier, timeout } from '../../../../../base/common/async.js';
+import { AutoOpenBarrier, DeferredPromise, timeout } from '../../../../../base/common/async.js';
 import { Codicon } from '../../../../../base/common/codicons.js';
 import { Emitter, Event } from '../../../../../base/common/event.js';
 import { Disposable, toDisposable } from '../../../../../base/common/lifecycle.js';
@@ -25,7 +25,7 @@ import { IQuickInputHideEvent, IQuickInputService, IQuickPick, IQuickPickDidAcce
 import { TerminalCapability, type ICwdDetectionCapability } from '../../../../../platform/terminal/common/capabilities/capabilities.js';
 import { PromptInputState } from '../../../../../platform/terminal/common/capabilities/commandDetection/promptInputModel.js';
 import { TerminalCapabilityStore } from '../../../../../platform/terminal/common/capabilities/terminalCapabilityStore.js';
-import { GeneralShellType, ITerminalChildProcess, ITerminalProfile, PosixShellType, remoteResolverTerminal, TerminalLocation, TitleEventSource, type IProcessReadyEvent, type IShellLaunchConfig, type ITerminalBackend, type ITerminalProcessOptions } from '../../../../../platform/terminal/common/terminal.js';
+import { GeneralShellType, ProcessPropertyType, type IProcessProperty, ITerminalChildProcess, ITerminalProfile, PosixShellType, remoteResolverTerminal, TerminalLocation, TitleEventSource, type IProcessReadyEvent, type IShellLaunchConfig, type ITerminalBackend, type ITerminalProcessOptions } from '../../../../../platform/terminal/common/terminal.js';
 import { IWorkspaceContextService, IWorkspaceFolder } from '../../../../../platform/workspace/common/workspace.js';
 import { IWorkspaceTrustRequestService } from '../../../../../platform/workspace/common/workspaceTrust.js';
 import { Workspace } from '../../../../../platform/workspace/test/common/testWorkspace.js';
@@ -467,16 +467,37 @@ suite('Workbench - TerminalInstance', () => {
 			strictEqual(taskTerminal.title, 'Test Task Name', 'Task terminal should preserve API-set title');
 		});
 
-		for (const { titleSource, title, reattach, expectedTitle, action } of [
+		for (const titleSource of [TitleEventSource.Api, TitleEventSource.Process, TitleEventSource.Sequence]) {
+			test(`configuration refresh preserves title provenance ${titleSource}`, async () => {
+				const terminalInstanceService = store.add(new TestTerminalInstanceService());
+				const instance = await createTerminalInstance(terminalInstanceService);
+				await terminalInstanceService.processCreatedPromise;
+				await timeout(0);
+				await instance.rename('build-server', titleSource);
+				await instance.rename(instance.title, TitleEventSource.Config);
+				deepStrictEqual({ title: instance.title, titleSource: instance.titleSource }, {
+					title: 'build-server',
+					titleSource
+				});
+				await instance.rename('bash', TitleEventSource.Process);
+				strictEqual(instance.title, titleSource === TitleEventSource.Api ? 'build-server' : 'bash');
+			});
+		}
+
+		for (const { titleSource, title, reattach, expectedTitle, action, pending = false } of [
 			{ titleSource: TitleEventSource.Api, title: 'build-server', reattach: true, expectedTitle: 'build-server', action: undefined },
 			{ titleSource: TitleEventSource.Api, title: 'build-server', reattach: false, expectedTitle: 'build-server', action: undefined },
 			{ titleSource: TitleEventSource.Process, title: 'node', reattach: false, expectedTitle: 'bash', action: undefined },
 			...([true, false].flatMap(reattach => [
 				{ titleSource: TitleEventSource.Api, title: 'build-server', reattach, expectedTitle: 'renamed-server', action: 'rename' },
 				{ titleSource: TitleEventSource.Api, title: 'build-server', reattach, expectedTitle: 'bash', action: 'clear' }
+			])),
+			...([true, false].flatMap(reattach => [
+				{ titleSource: TitleEventSource.Api, title: 'build-server', reattach, expectedTitle: 'renamed-server', action: 'rename', pending: true },
+				{ titleSource: TitleEventSource.Api, title: 'build-server', reattach, expectedTitle: 'bash', action: 'clear', pending: true }
 			]))
 		]) {
-			test(`restored terminal editor ${titleSource === TitleEventSource.Api ? 'preserves custom' : 'updates process'} title when attachment ${reattach ? 'succeeds' : 'fails'}${action ? ` then ${action} and relaunch` : ''}`, async () => {
+			test(`restored terminal editor ${titleSource === TitleEventSource.Api ? 'preserves custom' : 'updates process'} title when attachment ${reattach ? 'succeeds' : 'fails'}${action ? pending ? ` after ${action} while attachment is pending` : ` then ${action} and relaunch` : ''}`, async () => {
 				const sandbox = createSandbox();
 				store.add(toDisposable(() => sandbox.restore()));
 				const terminalInstanceService = store.add(new TestTerminalInstanceService());
@@ -484,11 +505,22 @@ suite('Workbench - TerminalInstance', () => {
 				const child = store.add(new TestTerminalChildProcess(true));
 				const ready = store.add(new Emitter<IProcessReadyEvent>());
 				child.onProcessReady = ready.event;
+				const propertyChanged = store.add(new Emitter<IProcessProperty>());
+				child.onDidChangeProperty = propertyChanged.event;
 				sandbox.stub(child, 'start').callsFake(async () => {
+					propertyChanged.fire({ type: ProcessPropertyType.InitialCwd, value: '/test' });
 					ready.fire({ pid: 1234, cwd: '/test', windowsPty: undefined });
 					return undefined;
 				});
-				const attach = sandbox.stub().resolves(reattach ? child : undefined);
+				const attachStarted = new DeferredPromise<void>();
+				const attachReleased = new DeferredPromise<void>();
+				const attach = sandbox.stub().callsFake(async () => {
+					await attachStarted.complete();
+					if (pending) {
+						await attachReleased.p;
+					}
+					return reattach ? child : undefined;
+				});
 				const create = sandbox.stub().resolves(child);
 				sandbox.stub(terminalInstanceService, 'getBackend').resolves({
 					...backend,
@@ -502,10 +534,15 @@ suite('Workbench - TerminalInstance', () => {
 					}
 				});
 				instance.target = TerminalLocation.Editor;
+				if (pending) {
+					await attachStarted.p;
+					await instance.rename(action === 'rename' ? 'renamed-server' : '');
+					await attachReleased.complete();
+				}
 				await instance.processReady;
 				// Flush the constructor's continuation that restores the attached title.
 				await timeout(0);
-				if (action) {
+				if (action && !pending) {
 					await instance.rename(action === 'rename' ? 'renamed-server' : '');
 					const relaunched = Event.toPromise(instance.onProcessIdReady);
 					instance.relaunch();
@@ -522,7 +559,7 @@ suite('Workbench - TerminalInstance', () => {
 					title: instance.title
 				}, {
 					attachedTo: [42, 5678],
-					createdProcesses: (reattach ? 0 : 1) + (action ? 1 : 0),
+					createdProcesses: (reattach ? 0 : 1) + (action && !pending ? 1 : 0),
 					title: expectedTitle
 				});
 			});
