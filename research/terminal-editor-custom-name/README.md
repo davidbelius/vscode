@@ -56,3 +56,24 @@ Searches covered official terminal docs and GitHub issue searches for terminal n
 ## Limits and next steps
 
 The GUI trials cover graceful close/reopen and reload, not crashes, server restarts, network outages, multiple client windows or arbitrary layouts. The focused unit regression will isolate one failure path; it will not establish the complete cause of every name-loss variant. Develop and validate a fix only after the regression is red for the expected title mismatch and its controls pass. Keep research updates here and product/test changes on their respective branches.
+
+## Unit regression validation — 2026-11-07
+
+The sibling branch `vibecoded/terminal-editor-custom-name/unit-test`, commit `631cfcb52d6`, adds three cases in `src/vs/workbench/contrib/terminal/test/browser/terminalInstance.test.ts`. It uses the real `TerminalInstance` and process manager with a mocked backend and child process. Attachment is attempted with the saved process ID and PID; the assertion also checks whether a replacement process was created. A process-title update then tests the visible title. The fixture supplies terminal-tab label settings needed by the label computer.
+
+| Case | Result |
+|---|---|
+| API/custom title, attachment succeeds | Pass: `build-server` remains |
+| API/custom title, attachment fails | Expected failure: actual `bash`, expected `build-server`; exactly one replacement process created |
+| Process-derived title, attachment fails | Pass: saved `node` changes to `bash` |
+
+Focused run: **2 passing, 1 failing**. Full test file: **114 passing, 2 pending, 1 failing**, with the same single expected regression failure. Targeted ESLint and `git diff --check` passed. No product fix is included. This confirms the metadata-loss fallback path on the current Insiders source; it does not prove why a particular remote process cannot be reattached or cover the serializer end to end.
+
+Reproduction from the unit-test worktree, after installing the pinned dependencies and building the client:
+
+```sh
+pnpm run build-fast --client-only
+xvfb-run -a scripts/test.sh --no-sandbox --disable-dev-shm-usage --run src/vs/workbench/contrib/terminal/test/browser/terminalInstance.test --grep 'restored terminal editor'
+```
+
+Remove `--grep` to run the whole file. Validation used Node 24.22.1, pnpm 12.16.0 and the repository's Electron 43.8.6 on Linux. The client build transpiles and is not a full TypeScript type check. In the test container, the default 64 MB shared-memory mount caused module-loading failures before assertions; `--disable-dev-shm-usage` allowed the runner to load. Container runtime packages were needed for Electron and native dependencies. Temporary runner diagnostics were removed; the committed runner is unchanged.
