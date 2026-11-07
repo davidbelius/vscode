@@ -28,6 +28,9 @@ import { containsDragType } from '../../../../platform/dnd/browser/dnd.js';
 import { getTerminalResourcesFromDragEvent, parseTerminalUri } from './terminalUri.js';
 import type { IProcessDetails } from '../../../../platform/terminal/common/terminalProcess.js';
 import { TerminalContribContextKeyStrings } from '../terminalContribExports.js';
+import { ViewContainerLocation, IViewDescriptorService } from '../../../common/views.js';
+import { isHorizontal, IWorkbenchLayoutService } from '../../../services/layout/browser/layoutService.js';
+import { TERMINAL_VIEW_ID } from '../common/terminal.js';
 
 const $ = dom.$;
 
@@ -72,6 +75,7 @@ export class TerminalTabbedView extends Disposable {
 	private _terminalTabsMouseContextKey: IContextKey<boolean>;
 
 	private _panelOrientation: Orientation | undefined;
+	private _orientationResizePending = false;
 	private _emptyAreaDropTargetCount = 0;
 
 	constructor(
@@ -87,8 +91,11 @@ export class TerminalTabbedView extends Disposable {
 		@IStorageService private readonly _storageService: IStorageService,
 		@IContextKeyService contextKeyService: IContextKeyService,
 		@IHoverService private readonly _hoverService: IHoverService,
+		@IWorkbenchLayoutService private readonly _layoutService: IWorkbenchLayoutService,
+		@IViewDescriptorService private readonly _viewDescriptorService: IViewDescriptorService,
 	) {
 		super();
+		this._panelOrientation = this._getPanelOrientation();
 
 		this._tabContainer = $('.tabs-container');
 		const tabListContainer = $('.tabs-list-container');
@@ -152,17 +159,36 @@ export class TerminalTabbedView extends Disposable {
 		this._attachEventListeners(parentElement, this._terminalContainer);
 
 		this._register(this._terminalGroupService.onDidChangePanelOrientation((orientation) => {
-			this._panelOrientation = orientation;
-			if (this._panelOrientation === Orientation.VERTICAL) {
-				this._terminalContainer.classList.add(CssClass.ViewIsVertical);
-			} else {
-				this._terminalContainer.classList.remove(CssClass.ViewIsVertical);
+			if (this._setPanelOrientation(orientation) && !this._orientationResizePending) {
+				this._orientationResizePending = true;
+				queueMicrotask(() => {
+					this._orientationResizePending = false;
+					if (!this._store.isDisposed && this._width !== undefined && this._shouldShowTabs()) {
+						this._splitView.resizeView(this._tabTreeIndex, this._getLastListWidth());
+						this._updateHasText();
+					}
+				});
 			}
 		}));
+		this._terminalContainer.classList.toggle(CssClass.ViewIsVertical, this._panelOrientation === Orientation.VERTICAL);
 
 		this._splitView = new SplitView(parentElement, { orientation: Orientation.HORIZONTAL, proportionalLayout: false });
 		this._setupSplitView(terminalOuterContainer);
 		this._updateChatTerminalsEntry();
+	}
+
+	private _getPanelOrientation(): Orientation {
+		return this._viewDescriptorService.getViewLocationById(TERMINAL_VIEW_ID) === ViewContainerLocation.Panel && isHorizontal(this._layoutService.getPanelPosition())
+			? Orientation.HORIZONTAL : Orientation.VERTICAL;
+	}
+
+	private _setPanelOrientation(orientation: Orientation): boolean {
+		if (this._panelOrientation === orientation) {
+			return false;
+		}
+		this._panelOrientation = orientation;
+		this._terminalContainer.classList.toggle(CssClass.ViewIsVertical, orientation === Orientation.VERTICAL);
+		return true;
 	}
 
 	private _shouldShowTabs(): boolean {
@@ -346,6 +372,7 @@ export class TerminalTabbedView extends Disposable {
 	}
 
 	layout(width: number, height: number): void {
+		this._setPanelOrientation(this._getPanelOrientation());
 		const chatItemHeight = this._chatEntry?.element.style.display === 'none' ? 0 : this._chatEntry?.element.clientHeight;
 		this._height = height - (chatItemHeight ?? 0);
 		this._width = width;
