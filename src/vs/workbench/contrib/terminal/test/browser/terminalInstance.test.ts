@@ -25,7 +25,7 @@ import { IQuickInputHideEvent, IQuickInputService, IQuickPick, IQuickPickDidAcce
 import { TerminalCapability, type ICwdDetectionCapability } from '../../../../../platform/terminal/common/capabilities/capabilities.js';
 import { PromptInputState } from '../../../../../platform/terminal/common/capabilities/commandDetection/promptInputModel.js';
 import { TerminalCapabilityStore } from '../../../../../platform/terminal/common/capabilities/terminalCapabilityStore.js';
-import { GeneralShellType, ITerminalChildProcess, ITerminalProfile, PosixShellType, remoteResolverTerminal, TitleEventSource, type IShellLaunchConfig, type ITerminalBackend, type ITerminalProcessOptions } from '../../../../../platform/terminal/common/terminal.js';
+import { GeneralShellType, ITerminalChildProcess, ITerminalProfile, PosixShellType, remoteResolverTerminal, TerminalLocation, TitleEventSource, type IProcessReadyEvent, type IShellLaunchConfig, type ITerminalBackend, type ITerminalProcessOptions } from '../../../../../platform/terminal/common/terminal.js';
 import { IWorkspaceContextService, IWorkspaceFolder } from '../../../../../platform/workspace/common/workspace.js';
 import { IWorkspaceTrustRequestService } from '../../../../../platform/workspace/common/workspaceTrust.js';
 import { Workspace } from '../../../../../platform/workspace/test/common/testWorkspace.js';
@@ -184,6 +184,12 @@ suite('Workbench - TerminalInstance', () => {
 							mouseWheelScrollSensitivity: 1,
 							unicodeVersion: '6',
 							commandsToSkipShell: [],
+							tabs: {
+								title: '${process}',
+								description: '${cwd}',
+								separator: ' - ',
+								allowAgentCliTitle: false
+							},
 							shellIntegration: {
 								enabled: true
 							}
@@ -460,6 +466,55 @@ suite('Workbench - TerminalInstance', () => {
 			// Verify that the task name is preserved
 			strictEqual(taskTerminal.title, 'Test Task Name', 'Task terminal should preserve API-set title');
 		});
+
+		for (const { titleSource, title, reattach, expectedTitle } of [
+			{ titleSource: TitleEventSource.Api, title: 'build-server', reattach: true, expectedTitle: 'build-server' },
+			{ titleSource: TitleEventSource.Api, title: 'build-server', reattach: false, expectedTitle: 'build-server' },
+			{ titleSource: TitleEventSource.Process, title: 'node', reattach: false, expectedTitle: 'bash' }
+		]) {
+			test(`restored terminal editor ${titleSource === TitleEventSource.Api ? 'preserves custom' : 'updates process'} title when attachment ${reattach ? 'succeeds' : 'fails'}`, async () => {
+				const sandbox = createSandbox();
+				store.add(toDisposable(() => sandbox.restore()));
+				const terminalInstanceService = store.add(new TestTerminalInstanceService());
+				const backend = await terminalInstanceService.getBackend();
+				const child = store.add(new TestTerminalChildProcess(true));
+				const ready = store.add(new Emitter<IProcessReadyEvent>());
+				child.onProcessReady = ready.event;
+				sandbox.stub(child, 'start').callsFake(async () => {
+					ready.fire({ pid: 1234, cwd: '/test', windowsPty: undefined });
+					return undefined;
+				});
+				const attach = sandbox.stub().resolves(reattach ? child : undefined);
+				const create = sandbox.stub().resolves(child);
+				sandbox.stub(terminalInstanceService, 'getBackend').resolves({
+					...backend,
+					attachToRevivedProcess: attach,
+					createProcess: create
+				});
+				const instance = await createTerminalInstance(terminalInstanceService, undefined, {
+					attachPersistentProcess: {
+						id: 42, pid: 5678, findRevivedId: true, title, titleSource,
+						cwd: '', shellIntegrationNonce: ''
+					}
+				});
+				instance.target = TerminalLocation.Editor;
+				await instance.processReady;
+				// Flush the constructor's continuation that restores the attached title.
+				await timeout(0);
+				// A newly launched shell reports its process title after restoration.
+				await instance.rename('bash', TitleEventSource.Process);
+
+				deepStrictEqual({
+					attachedTo: attach.firstCall.args,
+					createdProcesses: create.callCount,
+					title: instance.title
+				}, {
+					attachedTo: [42, 5678],
+					createdProcesses: reattach ? 0 : 1,
+					title: expectedTitle
+				});
+			});
+		}
 
 		test('should only load the line data event addon once when listeners are re-added', async () => {
 			const instance = await createTerminalInstance();
