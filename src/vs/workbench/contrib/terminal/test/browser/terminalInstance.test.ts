@@ -486,13 +486,13 @@ suite('Workbench - TerminalInstance', () => {
 			});
 		}
 
-		for (const { titleSource, title, reattach, expectedTitle, action, pending = false } of [
-			{ titleSource: TitleEventSource.Api, title: 'build-server', reattach: true, expectedTitle: 'build-server', action: undefined },
-			{ titleSource: TitleEventSource.Api, title: 'build-server', reattach: false, expectedTitle: 'build-server', action: undefined },
-			{ titleSource: TitleEventSource.Process, title: 'node', reattach: false, expectedTitle: 'bash', action: undefined },
+		for (const { titleSource, title, reattach, expectedTitle, action, pending } of [
+			{ titleSource: TitleEventSource.Api, title: 'build-server', reattach: true, expectedTitle: 'build-server', action: undefined, pending: false },
+			{ titleSource: TitleEventSource.Api, title: 'build-server', reattach: false, expectedTitle: 'build-server', action: undefined, pending: false },
+			{ titleSource: TitleEventSource.Process, title: 'node', reattach: false, expectedTitle: 'bash', action: undefined, pending: false },
 			...([true, false].flatMap(reattach => [
-				{ titleSource: TitleEventSource.Api, title: 'build-server', reattach, expectedTitle: 'renamed-server', action: 'rename' },
-				{ titleSource: TitleEventSource.Api, title: 'build-server', reattach, expectedTitle: 'bash', action: 'clear' }
+				{ titleSource: TitleEventSource.Api, title: 'build-server', reattach, expectedTitle: 'renamed-server', action: 'rename', pending: false },
+				{ titleSource: TitleEventSource.Api, title: 'build-server', reattach, expectedTitle: 'bash', action: 'clear', pending: false }
 			])),
 			...([true, false].flatMap(reattach => [
 				{ titleSource: TitleEventSource.Api, title: 'build-server', reattach, expectedTitle: 'renamed-server', action: 'rename', pending: true },
