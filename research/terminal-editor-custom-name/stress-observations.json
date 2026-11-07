@@ -1,0 +1,3024 @@
+{
+  "remote-close-1-reopen": {
+    "groups": [
+      {
+        "rect": {
+          "x": 353,
+          "y": 36,
+          "w": 786,
+          "h": 416
+        },
+        "tabs": [
+          {
+            "name": "beta.txt, Editor Group 1",
+            "text": "beta.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 353,
+          "y": 452,
+          "w": 786,
+          "h": 415
+        },
+        "tabs": [
+          {
+            "name": "remote-reopen-1, Editor Group 2",
+            "text": "remote-reopen-1",
+            "selected": "true"
+          }
+        ]
+      }
+    ],
+    "terminals": []
+  },
+  "remote-2-before": {
+    "groups": [
+      {
+        "rect": {
+          "x": 353,
+          "y": 36,
+          "w": 786,
+          "h": 416
+        },
+        "tabs": [
+          {
+            "name": "beta.txt, Editor Group 1",
+            "text": "beta.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 353,
+          "y": 452,
+          "w": 786,
+          "h": 415
+        },
+        "tabs": [
+          {
+            "name": "remote-panel-2, Editor Group 2",
+            "text": "remote-panel-2\ntmp",
+            "selected": "true"
+          }
+        ]
+      }
+    ],
+    "terminals": []
+  },
+  "local-2-moved": {
+    "groups": [
+      {
+        "rect": {
+          "x": 353,
+          "y": 36,
+          "w": 541,
+          "h": 831
+        },
+        "tabs": [
+          {
+            "name": "alpha.txt",
+            "text": "alpha.txt",
+            "selected": "false"
+          },
+          {
+            "name": "beta.txt",
+            "text": "beta.txt",
+            "selected": "false"
+          },
+          {
+            "name": "gamma.txt",
+            "text": "gamma.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 36,
+          "w": 541,
+          "h": 831
+        },
+        "tabs": [
+          {
+            "name": "round-2-final, Editor Group 2",
+            "text": "round-2-final\ntmp",
+            "selected": "true"
+          }
+        ]
+      }
+    ],
+    "terminals": []
+  },
+  "remote-workspace-closed": {
+    "groups": [
+      {
+        "rect": {
+          "x": 353,
+          "y": 36,
+          "w": 1082,
+          "h": 535
+        },
+        "tabs": []
+      }
+    ],
+    "terminals": [
+      {
+        "text": " bash",
+        "label": null
+      },
+      {
+        "text": "",
+        "label": null
+      }
+    ]
+  },
+  "local-3-relaunch": {
+    "groups": [
+      {
+        "rect": {
+          "x": 353,
+          "y": 36,
+          "w": 541,
+          "h": 831
+        },
+        "tabs": [
+          {
+            "name": "alpha.txt",
+            "text": "alpha.txt",
+            "selected": "false"
+          },
+          {
+            "name": "beta.txt",
+            "text": "beta.txt",
+            "selected": "false"
+          },
+          {
+            "name": "gamma.txt",
+            "text": "gamma.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 36,
+          "w": 541,
+          "h": 831
+        },
+        "tabs": [
+          {
+            "name": "round-3-after-reload, Editor Group 2",
+            "text": "round-3-after-reload",
+            "selected": "true"
+          }
+        ]
+      }
+    ],
+    "terminals": []
+  },
+  "01-editor-created": {
+    "groups": [
+      {
+        "rect": {
+          "x": 353,
+          "y": 36,
+          "w": 541,
+          "h": 831
+        },
+        "tabs": [
+          {
+            "name": "alpha.txt, Editor Group 1",
+            "text": "alpha.txt",
+            "selected": "false"
+          },
+          {
+            "name": "beta.txt, Editor Group 1",
+            "text": "beta.txt",
+            "selected": "false"
+          },
+          {
+            "name": "gamma.txt, Editor Group 1",
+            "text": "gamma.txt",
+            "selected": "false"
+          },
+          {
+            "name": "editor-A, Editor Group 1",
+            "text": "editor-A",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 36,
+          "w": 541,
+          "h": 831
+        },
+        "tabs": []
+      }
+    ],
+    "terminals": []
+  },
+  "double-0-reopen": {
+    "groups": [
+      {
+        "rect": {
+          "x": 353,
+          "y": 36,
+          "w": 541,
+          "h": 535
+        },
+        "tabs": [
+          {
+            "name": "alpha.txt, Editor Group 1",
+            "text": "alpha.txt",
+            "selected": "false"
+          },
+          {
+            "name": "gamma.txt, Editor Group 1",
+            "text": "gamma.txt",
+            "selected": "false"
+          },
+          {
+            "name": "panel-other, Editor Group 1",
+            "text": "panel-other",
+            "selected": "false"
+          },
+          {
+            "name": "double-restore-0, Editor Group 1",
+            "text": "double-restore-0",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 36,
+          "w": 541,
+          "h": 268
+        },
+        "tabs": [
+          {
+            "name": "beta.txt",
+            "text": "beta.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 304,
+          "w": 541,
+          "h": 267
+        },
+        "tabs": []
+      }
+    ],
+    "terminals": [
+      {
+        "text": "\u250c  panel-main",
+        "label": null
+      },
+      {
+        "text": "\u251c  split-repro-1",
+        "label": null
+      },
+      {
+        "text": "\u2514  split-repro-0",
+        "label": null
+      },
+      {
+        "text": "",
+        "label": null
+      }
+    ]
+  },
+  "empty-palette-result": {
+    "groups": [
+      {
+        "rect": {
+          "x": 353,
+          "y": 36,
+          "w": 541,
+          "h": 535
+        },
+        "tabs": [
+          {
+            "name": "alpha.txt, Editor Group 1",
+            "text": "alpha.txt",
+            "selected": "false"
+          },
+          {
+            "name": "gamma.txt, Editor Group 1",
+            "text": "gamma.txt",
+            "selected": "false"
+          },
+          {
+            "name": "panel-other, Editor Group 1",
+            "text": "panel-other",
+            "selected": "false"
+          },
+          {
+            "name": "clear-ui-check, Editor Group 1",
+            "text": "clear-ui-check",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 36,
+          "w": 541,
+          "h": 268
+        },
+        "tabs": [
+          {
+            "name": "beta.txt",
+            "text": "beta.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 304,
+          "w": 541,
+          "h": 267
+        },
+        "tabs": []
+      }
+    ],
+    "terminals": [
+      {
+        "text": "\u250c  panel-main",
+        "label": null
+      },
+      {
+        "text": "\u251c  split-repro-1",
+        "label": null
+      },
+      {
+        "text": "\u2514  split-repro-0",
+        "label": null
+      },
+      {
+        "text": "",
+        "label": null
+      }
+    ]
+  },
+  "remote-1-reload": {
+    "groups": [
+      {
+        "rect": {
+          "x": 353,
+          "y": 36,
+          "w": 786,
+          "h": 416
+        },
+        "tabs": [
+          {
+            "name": "beta.txt, Editor Group 1",
+            "text": "beta.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 353,
+          "y": 452,
+          "w": 786,
+          "h": 415
+        },
+        "tabs": [
+          {
+            "name": "remote-panel-1, Editor Group 2",
+            "text": "remote-panel-1",
+            "selected": "true"
+          }
+        ]
+      }
+    ],
+    "terminals": []
+  },
+  "remote-workspace-reopened": {
+    "groups": [
+      {
+        "rect": {
+          "x": 353,
+          "y": 36,
+          "w": 786,
+          "h": 416
+        },
+        "tabs": [
+          {
+            "name": "beta.txt, Editor Group 1",
+            "text": "beta.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 353,
+          "y": 452,
+          "w": 786,
+          "h": 415
+        },
+        "tabs": [
+          {
+            "name": "bash, Editor Group 2",
+            "text": "bash",
+            "selected": "true"
+          }
+        ]
+      }
+    ],
+    "terminals": []
+  },
+  "local-1-moved": {
+    "groups": [
+      {
+        "rect": {
+          "x": 353,
+          "y": 36,
+          "w": 541,
+          "h": 831
+        },
+        "tabs": [
+          {
+            "name": "alpha.txt, Editor Group 1",
+            "text": "alpha.txt",
+            "selected": "false"
+          },
+          {
+            "name": "beta.txt, Editor Group 1",
+            "text": "beta.txt",
+            "selected": "false"
+          },
+          {
+            "name": "gamma.txt, Editor Group 1",
+            "text": "gamma.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 36,
+          "w": 541,
+          "h": 831
+        },
+        "tabs": [
+          {
+            "name": "round-1-final, Editor Group 2",
+            "text": "round-1-final\ntmp",
+            "selected": "true"
+          }
+        ]
+      }
+    ],
+    "terminals": []
+  },
+  "split-0-reload": {
+    "groups": [
+      {
+        "rect": {
+          "x": 353,
+          "y": 36,
+          "w": 541,
+          "h": 535
+        },
+        "tabs": [
+          {
+            "name": "alpha.txt, Editor Group 1",
+            "text": "alpha.txt",
+            "selected": "false"
+          },
+          {
+            "name": "gamma.txt, Editor Group 1",
+            "text": "gamma.txt",
+            "selected": "false"
+          },
+          {
+            "name": "panel-other, Editor Group 1",
+            "text": "panel-other",
+            "selected": "false"
+          },
+          {
+            "name": "bash, Editor Group 1",
+            "text": "bash",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 36,
+          "w": 541,
+          "h": 268
+        },
+        "tabs": [
+          {
+            "name": "beta.txt",
+            "text": "beta.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 304,
+          "w": 541,
+          "h": 267
+        },
+        "tabs": []
+      }
+    ],
+    "terminals": [
+      {
+        "text": "\u250c  panel-main",
+        "label": null
+      },
+      {
+        "text": "\u2514  split-repro-0",
+        "label": null
+      },
+      {
+        "text": "",
+        "label": null
+      }
+    ]
+  },
+  "inactive-1-renamed": {
+    "groups": [
+      {
+        "rect": {
+          "x": 353,
+          "y": 36,
+          "w": 541,
+          "h": 535
+        },
+        "tabs": [
+          {
+            "name": "alpha.txt, Editor Group 1",
+            "text": "alpha.txt",
+            "selected": "false"
+          },
+          {
+            "name": "gamma.txt, Editor Group 1",
+            "text": "gamma.txt",
+            "selected": "false"
+          },
+          {
+            "name": "panel-other, Editor Group 1",
+            "text": "panel-other",
+            "selected": "false"
+          },
+          {
+            "name": "inactive-editor-1, Editor Group 1",
+            "text": "inactive-editor-1",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 36,
+          "w": 541,
+          "h": 268
+        },
+        "tabs": [
+          {
+            "name": "beta.txt",
+            "text": "beta.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 304,
+          "w": 541,
+          "h": 267
+        },
+        "tabs": []
+      }
+    ],
+    "terminals": [
+      {
+        "text": "\u250c  panel-main",
+        "label": null
+      },
+      {
+        "text": "\u251c  split-repro-1",
+        "label": null
+      },
+      {
+        "text": "\u2514  split-repro-0",
+        "label": null
+      },
+      {
+        "text": "",
+        "label": null
+      }
+    ]
+  },
+  "remote-1-relaunch": {
+    "groups": [
+      {
+        "rect": {
+          "x": 353,
+          "y": 36,
+          "w": 786,
+          "h": 416
+        },
+        "tabs": [
+          {
+            "name": "beta.txt, Editor Group 1",
+            "text": "beta.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 353,
+          "y": 452,
+          "w": 786,
+          "h": 415
+        },
+        "tabs": [
+          {
+            "name": "remote-renamed-1, Editor Group 2",
+            "text": "remote-renamed-1",
+            "selected": "true"
+          }
+        ]
+      }
+    ],
+    "terminals": []
+  },
+  "remote-close-1-reload": {
+    "groups": [
+      {
+        "rect": {
+          "x": 353,
+          "y": 36,
+          "w": 786,
+          "h": 416
+        },
+        "tabs": [
+          {
+            "name": "beta.txt, Editor Group 1",
+            "text": "beta.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 353,
+          "y": 452,
+          "w": 786,
+          "h": 415
+        },
+        "tabs": [
+          {
+            "name": "bash, Editor Group 2",
+            "text": "bash",
+            "selected": "true"
+          }
+        ]
+      }
+    ],
+    "terminals": []
+  },
+  "inactive-1-reload": {
+    "groups": [
+      {
+        "rect": {
+          "x": 353,
+          "y": 36,
+          "w": 541,
+          "h": 535
+        },
+        "tabs": [
+          {
+            "name": "alpha.txt, Editor Group 1",
+            "text": "alpha.txt",
+            "selected": "false"
+          },
+          {
+            "name": "gamma.txt, Editor Group 1",
+            "text": "gamma.txt",
+            "selected": "false"
+          },
+          {
+            "name": "panel-other, Editor Group 1",
+            "text": "panel-other",
+            "selected": "false"
+          },
+          {
+            "name": "inactive-editor-1, Editor Group 1",
+            "text": "inactive-editor-1",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 36,
+          "w": 541,
+          "h": 268
+        },
+        "tabs": [
+          {
+            "name": "beta.txt",
+            "text": "beta.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 304,
+          "w": 541,
+          "h": 267
+        },
+        "tabs": []
+      }
+    ],
+    "terminals": [
+      {
+        "text": "\u250c  panel-main",
+        "label": null
+      },
+      {
+        "text": "\u251c  split-repro-1",
+        "label": null
+      },
+      {
+        "text": "\u2514  split-repro-0",
+        "label": null
+      },
+      {
+        "text": "",
+        "label": null
+      }
+    ]
+  },
+  "remote-2-reload": {
+    "groups": [
+      {
+        "rect": {
+          "x": 353,
+          "y": 36,
+          "w": 786,
+          "h": 416
+        },
+        "tabs": [
+          {
+            "name": "beta.txt, Editor Group 1",
+            "text": "beta.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 353,
+          "y": 452,
+          "w": 786,
+          "h": 415
+        },
+        "tabs": [
+          {
+            "name": "remote-panel-2, Editor Group 2",
+            "text": "remote-panel-2",
+            "selected": "true"
+          }
+        ]
+      }
+    ],
+    "terminals": []
+  },
+  "local-1-relaunch": {
+    "groups": [
+      {
+        "rect": {
+          "x": 353,
+          "y": 36,
+          "w": 541,
+          "h": 831
+        },
+        "tabs": [
+          {
+            "name": "alpha.txt",
+            "text": "alpha.txt",
+            "selected": "false"
+          },
+          {
+            "name": "beta.txt",
+            "text": "beta.txt",
+            "selected": "false"
+          },
+          {
+            "name": "gamma.txt",
+            "text": "gamma.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 36,
+          "w": 541,
+          "h": 831
+        },
+        "tabs": [
+          {
+            "name": "round-1-after-reload, Editor Group 2",
+            "text": "round-1-after-reload",
+            "selected": "true"
+          }
+        ]
+      }
+    ],
+    "terminals": []
+  },
+  "workspace-reopened": {
+    "groups": [
+      {
+        "rect": {
+          "x": 353,
+          "y": 36,
+          "w": 541,
+          "h": 535
+        },
+        "tabs": [
+          {
+            "name": "alpha.txt, Editor Group 1",
+            "text": "alpha.txt",
+            "selected": "false"
+          },
+          {
+            "name": "gamma.txt, Editor Group 1",
+            "text": "gamma.txt",
+            "selected": "false"
+          },
+          {
+            "name": "panel-other, Editor Group 1",
+            "text": "panel-other",
+            "selected": "false"
+          },
+          {
+            "name": "clear-ui-check, Editor Group 1",
+            "text": "clear-ui-check",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 36,
+          "w": 541,
+          "h": 268
+        },
+        "tabs": [
+          {
+            "name": "beta.txt",
+            "text": "beta.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 304,
+          "w": 541,
+          "h": 267
+        },
+        "tabs": []
+      }
+    ],
+    "terminals": [
+      {
+        "text": "\u250c  panel-main",
+        "label": null
+      },
+      {
+        "text": "\u251c  split-repro-1",
+        "label": null
+      },
+      {
+        "text": "\u2514  split-repro-0",
+        "label": null
+      },
+      {
+        "text": "",
+        "label": null
+      }
+    ]
+  },
+  "inactive-0-reload": {
+    "groups": [
+      {
+        "rect": {
+          "x": 353,
+          "y": 36,
+          "w": 541,
+          "h": 535
+        },
+        "tabs": [
+          {
+            "name": "alpha.txt, Editor Group 1",
+            "text": "alpha.txt",
+            "selected": "false"
+          },
+          {
+            "name": "gamma.txt, Editor Group 1",
+            "text": "gamma.txt",
+            "selected": "false"
+          },
+          {
+            "name": "panel-other, Editor Group 1",
+            "text": "panel-other",
+            "selected": "false"
+          },
+          {
+            "name": "inactive-editor-0, Editor Group 1",
+            "text": "inactive-editor-0",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 36,
+          "w": 541,
+          "h": 268
+        },
+        "tabs": [
+          {
+            "name": "beta.txt",
+            "text": "beta.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 304,
+          "w": 541,
+          "h": 267
+        },
+        "tabs": []
+      }
+    ],
+    "terminals": [
+      {
+        "text": "\u250c  panel-main",
+        "label": null
+      },
+      {
+        "text": "\u251c  split-repro-1",
+        "label": null
+      },
+      {
+        "text": "\u2514  split-repro-0",
+        "label": null
+      },
+      {
+        "text": "",
+        "label": null
+      }
+    ]
+  },
+  "local-2-reopen": {
+    "groups": [
+      {
+        "rect": {
+          "x": 353,
+          "y": 36,
+          "w": 541,
+          "h": 831
+        },
+        "tabs": [
+          {
+            "name": "alpha.txt",
+            "text": "alpha.txt",
+            "selected": "false"
+          },
+          {
+            "name": "beta.txt",
+            "text": "beta.txt",
+            "selected": "false"
+          },
+          {
+            "name": "gamma.txt",
+            "text": "gamma.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 36,
+          "w": 541,
+          "h": 831
+        },
+        "tabs": [
+          {
+            "name": "saved-2, Editor Group 2",
+            "text": "saved-2",
+            "selected": "true"
+          }
+        ]
+      }
+    ],
+    "terminals": []
+  },
+  "split-1-reload": {
+    "groups": [
+      {
+        "rect": {
+          "x": 353,
+          "y": 36,
+          "w": 541,
+          "h": 535
+        },
+        "tabs": [
+          {
+            "name": "alpha.txt, Editor Group 1",
+            "text": "alpha.txt",
+            "selected": "false"
+          },
+          {
+            "name": "gamma.txt, Editor Group 1",
+            "text": "gamma.txt",
+            "selected": "false"
+          },
+          {
+            "name": "panel-other, Editor Group 1",
+            "text": "panel-other",
+            "selected": "false"
+          },
+          {
+            "name": "bash, Editor Group 1",
+            "text": "bash",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 36,
+          "w": 541,
+          "h": 268
+        },
+        "tabs": [
+          {
+            "name": "beta.txt",
+            "text": "beta.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 304,
+          "w": 541,
+          "h": 267
+        },
+        "tabs": []
+      }
+    ],
+    "terminals": [
+      {
+        "text": "\u250c  panel-main",
+        "label": null
+      },
+      {
+        "text": "\u251c  split-repro-1",
+        "label": null
+      },
+      {
+        "text": "\u2514  split-repro-0",
+        "label": null
+      },
+      {
+        "text": "",
+        "label": null
+      }
+    ]
+  },
+  "mixed-1-moved": {
+    "groups": [
+      {
+        "rect": {
+          "x": 353,
+          "y": 36,
+          "w": 541,
+          "h": 535
+        },
+        "tabs": [
+          {
+            "name": "alpha.txt, Editor Group 1",
+            "text": "alpha.txt",
+            "selected": "false"
+          },
+          {
+            "name": "gamma.txt, Editor Group 1",
+            "text": "gamma.txt",
+            "selected": "false"
+          },
+          {
+            "name": "panel-other, Editor Group 1",
+            "text": "panel-other",
+            "selected": "false"
+          },
+          {
+            "name": "moved-panel-1, Editor Group 1",
+            "text": "moved-panel-1",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 36,
+          "w": 541,
+          "h": 268
+        },
+        "tabs": [
+          {
+            "name": "beta.txt",
+            "text": "beta.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 304,
+          "w": 541,
+          "h": 267
+        },
+        "tabs": []
+      }
+    ],
+    "terminals": [
+      {
+        "text": " panel-main",
+        "label": null
+      },
+      {
+        "text": "",
+        "label": null
+      }
+    ]
+  },
+  "local-1-reload": {
+    "groups": [
+      {
+        "rect": {
+          "x": 353,
+          "y": 36,
+          "w": 541,
+          "h": 831
+        },
+        "tabs": [
+          {
+            "name": "alpha.txt",
+            "text": "alpha.txt",
+            "selected": "false"
+          },
+          {
+            "name": "beta.txt",
+            "text": "beta.txt",
+            "selected": "false"
+          },
+          {
+            "name": "gamma.txt",
+            "text": "gamma.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 36,
+          "w": 541,
+          "h": 831
+        },
+        "tabs": [
+          {
+            "name": "round-1-final, Editor Group 2",
+            "text": "round-1-final\ntmp",
+            "selected": "true"
+          }
+        ]
+      }
+    ],
+    "terminals": []
+  },
+  "remote-close-1-before": {
+    "groups": [
+      {
+        "rect": {
+          "x": 353,
+          "y": 36,
+          "w": 786,
+          "h": 416
+        },
+        "tabs": [
+          {
+            "name": "beta.txt, Editor Group 1",
+            "text": "beta.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 353,
+          "y": 452,
+          "w": 786,
+          "h": 415
+        },
+        "tabs": [
+          {
+            "name": "remote-reopen-1, Editor Group 2",
+            "text": "remote-reopen-1",
+            "selected": "true"
+          }
+        ]
+      }
+    ],
+    "terminals": []
+  },
+  "local-1-reopen": {
+    "groups": [
+      {
+        "rect": {
+          "x": 353,
+          "y": 36,
+          "w": 541,
+          "h": 831
+        },
+        "tabs": [
+          {
+            "name": "alpha.txt",
+            "text": "alpha.txt",
+            "selected": "false"
+          },
+          {
+            "name": "beta.txt",
+            "text": "beta.txt",
+            "selected": "false"
+          },
+          {
+            "name": "gamma.txt",
+            "text": "gamma.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 36,
+          "w": 541,
+          "h": 831
+        },
+        "tabs": [
+          {
+            "name": "saved-1, Editor Group 2",
+            "text": "saved-1",
+            "selected": "true"
+          }
+        ]
+      }
+    ],
+    "terminals": []
+  },
+  "closed-workspace": {
+    "groups": [
+      {
+        "rect": {
+          "x": 53,
+          "y": 36,
+          "w": 1382,
+          "h": 831
+        },
+        "tabs": []
+      }
+    ],
+    "terminals": []
+  },
+  "remote-start": {
+    "groups": [
+      {
+        "rect": {
+          "x": 353,
+          "y": 36,
+          "w": 786,
+          "h": 831
+        },
+        "tabs": []
+      }
+    ],
+    "terminals": []
+  },
+  "mixed-0-moved": {
+    "groups": [
+      {
+        "rect": {
+          "x": 353,
+          "y": 36,
+          "w": 541,
+          "h": 535
+        },
+        "tabs": [
+          {
+            "name": "alpha.txt, Editor Group 1",
+            "text": "alpha.txt",
+            "selected": "false"
+          },
+          {
+            "name": "gamma.txt, Editor Group 1",
+            "text": "gamma.txt",
+            "selected": "false"
+          },
+          {
+            "name": "panel-other, Editor Group 1",
+            "text": "panel-other",
+            "selected": "false"
+          },
+          {
+            "name": "moved-panel-0, Editor Group 1",
+            "text": "moved-panel-0",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 36,
+          "w": 541,
+          "h": 268
+        },
+        "tabs": [
+          {
+            "name": "beta.txt, Editor Group 2",
+            "text": "beta.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 304,
+          "w": 541,
+          "h": 267
+        },
+        "tabs": []
+      }
+    ],
+    "terminals": [
+      {
+        "text": "\u250c  panel-main",
+        "label": null
+      },
+      {
+        "text": "\u2514  panel-split",
+        "label": null
+      },
+      {
+        "text": "",
+        "label": null
+      }
+    ]
+  },
+  "local-3-reload": {
+    "groups": [
+      {
+        "rect": {
+          "x": 353,
+          "y": 36,
+          "w": 541,
+          "h": 831
+        },
+        "tabs": [
+          {
+            "name": "alpha.txt",
+            "text": "alpha.txt",
+            "selected": "false"
+          },
+          {
+            "name": "beta.txt",
+            "text": "beta.txt",
+            "selected": "false"
+          },
+          {
+            "name": "gamma.txt",
+            "text": "gamma.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 36,
+          "w": 541,
+          "h": 831
+        },
+        "tabs": [
+          {
+            "name": "round-3-final, Editor Group 2",
+            "text": "round-3-final\ntmp",
+            "selected": "true"
+          }
+        ]
+      }
+    ],
+    "terminals": []
+  },
+  "mixed-1-reopen": {
+    "groups": [
+      {
+        "rect": {
+          "x": 353,
+          "y": 36,
+          "w": 541,
+          "h": 535
+        },
+        "tabs": [
+          {
+            "name": "alpha.txt, Editor Group 1",
+            "text": "alpha.txt",
+            "selected": "false"
+          },
+          {
+            "name": "gamma.txt, Editor Group 1",
+            "text": "gamma.txt",
+            "selected": "false"
+          },
+          {
+            "name": "panel-other, Editor Group 1",
+            "text": "panel-other",
+            "selected": "false"
+          },
+          {
+            "name": "mixed-final-1, Editor Group 1",
+            "text": "mixed-final-1",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 36,
+          "w": 541,
+          "h": 268
+        },
+        "tabs": [
+          {
+            "name": "beta.txt",
+            "text": "beta.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 304,
+          "w": 541,
+          "h": 267
+        },
+        "tabs": []
+      }
+    ],
+    "terminals": [
+      {
+        "text": " panel-main",
+        "label": null
+      },
+      {
+        "text": "",
+        "label": null
+      }
+    ]
+  },
+  "remote-0-reload": {
+    "groups": [
+      {
+        "rect": {
+          "x": 353,
+          "y": 36,
+          "w": 786,
+          "h": 416
+        },
+        "tabs": [
+          {
+            "name": "beta.txt, Editor Group 1",
+            "text": "beta.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 353,
+          "y": 452,
+          "w": 786,
+          "h": 415
+        },
+        "tabs": [
+          {
+            "name": "remote-panel-0, Editor Group 2",
+            "text": "remote-panel-0",
+            "selected": "true"
+          }
+        ]
+      }
+    ],
+    "terminals": []
+  },
+  "remote-0-relaunch": {
+    "groups": [
+      {
+        "rect": {
+          "x": 353,
+          "y": 36,
+          "w": 786,
+          "h": 416
+        },
+        "tabs": [
+          {
+            "name": "beta.txt, Editor Group 1",
+            "text": "beta.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 353,
+          "y": 452,
+          "w": 786,
+          "h": 415
+        },
+        "tabs": [
+          {
+            "name": "remote-renamed-0, Editor Group 2",
+            "text": "remote-renamed-0",
+            "selected": "true"
+          }
+        ]
+      }
+    ],
+    "terminals": []
+  },
+  "double-0-reload": {
+    "groups": [
+      {
+        "rect": {
+          "x": 353,
+          "y": 36,
+          "w": 541,
+          "h": 535
+        },
+        "tabs": [
+          {
+            "name": "alpha.txt, Editor Group 1",
+            "text": "alpha.txt",
+            "selected": "false"
+          },
+          {
+            "name": "gamma.txt, Editor Group 1",
+            "text": "gamma.txt",
+            "selected": "false"
+          },
+          {
+            "name": "panel-other, Editor Group 1",
+            "text": "panel-other",
+            "selected": "false"
+          },
+          {
+            "name": "bash, Editor Group 1",
+            "text": "bash",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 36,
+          "w": 541,
+          "h": 268
+        },
+        "tabs": [
+          {
+            "name": "beta.txt",
+            "text": "beta.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 304,
+          "w": 541,
+          "h": 267
+        },
+        "tabs": []
+      }
+    ],
+    "terminals": [
+      {
+        "text": "\u250c  panel-main",
+        "label": null
+      },
+      {
+        "text": "\u251c  split-repro-1",
+        "label": null
+      },
+      {
+        "text": "\u2514  split-repro-0",
+        "label": null
+      },
+      {
+        "text": "",
+        "label": null
+      }
+    ]
+  },
+  "mixed-layout": {
+    "groups": [
+      {
+        "rect": {
+          "x": 353,
+          "y": 36,
+          "w": 541,
+          "h": 535
+        },
+        "tabs": [
+          {
+            "name": "alpha.txt, Editor Group 1",
+            "text": "alpha.txt",
+            "selected": "false"
+          },
+          {
+            "name": "gamma.txt, Editor Group 1",
+            "text": "gamma.txt",
+            "selected": "false"
+          },
+          {
+            "name": "panel-other, Editor Group 1",
+            "text": "panel-other",
+            "selected": "false"
+          },
+          {
+            "name": "editor-mixed, Editor Group 1",
+            "text": "editor-mixed",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 36,
+          "w": 541,
+          "h": 268
+        },
+        "tabs": [
+          {
+            "name": "beta.txt, Editor Group 2",
+            "text": "beta.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 304,
+          "w": 541,
+          "h": 267
+        },
+        "tabs": []
+      }
+    ],
+    "terminals": [
+      {
+        "text": "\u250c  panel-main",
+        "label": null
+      },
+      {
+        "text": "\u2514  panel-split",
+        "label": null
+      },
+      {
+        "text": "",
+        "label": null
+      }
+    ]
+  },
+  "local-2-relaunch": {
+    "groups": [
+      {
+        "rect": {
+          "x": 353,
+          "y": 36,
+          "w": 541,
+          "h": 831
+        },
+        "tabs": [
+          {
+            "name": "alpha.txt",
+            "text": "alpha.txt",
+            "selected": "false"
+          },
+          {
+            "name": "beta.txt",
+            "text": "beta.txt",
+            "selected": "false"
+          },
+          {
+            "name": "gamma.txt",
+            "text": "gamma.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 36,
+          "w": 541,
+          "h": 831
+        },
+        "tabs": [
+          {
+            "name": "round-2-after-reload, Editor Group 2",
+            "text": "round-2-after-reload",
+            "selected": "true"
+          }
+        ]
+      }
+    ],
+    "terminals": []
+  },
+  "local-2-clear": {
+    "groups": [
+      {
+        "rect": {
+          "x": 353,
+          "y": 36,
+          "w": 541,
+          "h": 831
+        },
+        "tabs": [
+          {
+            "name": "alpha.txt",
+            "text": "alpha.txt",
+            "selected": "false"
+          },
+          {
+            "name": "beta.txt",
+            "text": "beta.txt",
+            "selected": "false"
+          },
+          {
+            "name": "gamma.txt",
+            "text": "gamma.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 36,
+          "w": 541,
+          "h": 831
+        },
+        "tabs": [
+          {
+            "name": "round-2-after-reload, Editor Group 2",
+            "text": "round-2-after-reload",
+            "selected": "true"
+          }
+        ]
+      }
+    ],
+    "terminals": []
+  },
+  "double-1-reload": {
+    "groups": [
+      {
+        "rect": {
+          "x": 353,
+          "y": 36,
+          "w": 541,
+          "h": 535
+        },
+        "tabs": [
+          {
+            "name": "alpha.txt, Editor Group 1",
+            "text": "alpha.txt",
+            "selected": "false"
+          },
+          {
+            "name": "gamma.txt, Editor Group 1",
+            "text": "gamma.txt",
+            "selected": "false"
+          },
+          {
+            "name": "panel-other, Editor Group 1",
+            "text": "panel-other",
+            "selected": "false"
+          },
+          {
+            "name": "bash, Editor Group 1",
+            "text": "bash",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 36,
+          "w": 541,
+          "h": 268
+        },
+        "tabs": [
+          {
+            "name": "beta.txt",
+            "text": "beta.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 304,
+          "w": 541,
+          "h": 267
+        },
+        "tabs": []
+      }
+    ],
+    "terminals": [
+      {
+        "text": "\u250c  panel-main",
+        "label": null
+      },
+      {
+        "text": "\u251c  split-repro-1",
+        "label": null
+      },
+      {
+        "text": "\u2514  split-repro-0",
+        "label": null
+      },
+      {
+        "text": "",
+        "label": null
+      }
+    ]
+  },
+  "local-3-moved": {
+    "groups": [
+      {
+        "rect": {
+          "x": 353,
+          "y": 36,
+          "w": 541,
+          "h": 831
+        },
+        "tabs": [
+          {
+            "name": "alpha.txt",
+            "text": "alpha.txt",
+            "selected": "false"
+          },
+          {
+            "name": "beta.txt",
+            "text": "beta.txt",
+            "selected": "false"
+          },
+          {
+            "name": "gamma.txt",
+            "text": "gamma.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 36,
+          "w": 541,
+          "h": 831
+        },
+        "tabs": [
+          {
+            "name": "round-3-final, Editor Group 2",
+            "text": "round-3-final\ntmp",
+            "selected": "true"
+          }
+        ]
+      }
+    ],
+    "terminals": []
+  },
+  "inactive-1-before": {
+    "groups": [
+      {
+        "rect": {
+          "x": 353,
+          "y": 36,
+          "w": 541,
+          "h": 535
+        },
+        "tabs": [
+          {
+            "name": "alpha.txt, Editor Group 1",
+            "text": "alpha.txt",
+            "selected": "false"
+          },
+          {
+            "name": "gamma.txt, Editor Group 1",
+            "text": "gamma.txt",
+            "selected": "false"
+          },
+          {
+            "name": "panel-other, Editor Group 1",
+            "text": "panel-other",
+            "selected": "false"
+          },
+          {
+            "name": "inactive-editor-1, Editor Group 1",
+            "text": "inactive-editor-1",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 36,
+          "w": 541,
+          "h": 268
+        },
+        "tabs": [
+          {
+            "name": "beta.txt",
+            "text": "beta.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 304,
+          "w": 541,
+          "h": 267
+        },
+        "tabs": []
+      }
+    ],
+    "terminals": [
+      {
+        "text": "\u250c  panel-main",
+        "label": null
+      },
+      {
+        "text": "\u251c  split-repro-1",
+        "label": null
+      },
+      {
+        "text": "\u2514  split-repro-0",
+        "label": null
+      },
+      {
+        "text": "",
+        "label": null
+      }
+    ]
+  },
+  "mixed-0-reload": {
+    "groups": [
+      {
+        "rect": {
+          "x": 353,
+          "y": 36,
+          "w": 541,
+          "h": 535
+        },
+        "tabs": [
+          {
+            "name": "alpha.txt, Editor Group 1",
+            "text": "alpha.txt",
+            "selected": "false"
+          },
+          {
+            "name": "gamma.txt, Editor Group 1",
+            "text": "gamma.txt",
+            "selected": "false"
+          },
+          {
+            "name": "panel-other, Editor Group 1",
+            "text": "panel-other",
+            "selected": "false"
+          },
+          {
+            "name": "moved-panel-0, Editor Group 1",
+            "text": "moved-panel-0",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 36,
+          "w": 541,
+          "h": 268
+        },
+        "tabs": [
+          {
+            "name": "beta.txt",
+            "text": "beta.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 304,
+          "w": 541,
+          "h": 267
+        },
+        "tabs": []
+      }
+    ],
+    "terminals": [
+      {
+        "text": " panel-main",
+        "label": null
+      },
+      {
+        "text": "",
+        "label": null
+      }
+    ]
+  },
+  "mixed-0-reopen": {
+    "groups": [
+      {
+        "rect": {
+          "x": 353,
+          "y": 36,
+          "w": 541,
+          "h": 535
+        },
+        "tabs": [
+          {
+            "name": "alpha.txt, Editor Group 1",
+            "text": "alpha.txt",
+            "selected": "false"
+          },
+          {
+            "name": "gamma.txt, Editor Group 1",
+            "text": "gamma.txt",
+            "selected": "false"
+          },
+          {
+            "name": "panel-other, Editor Group 1",
+            "text": "panel-other",
+            "selected": "false"
+          },
+          {
+            "name": "mixed-final-0, Editor Group 1",
+            "text": "mixed-final-0",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 36,
+          "w": 541,
+          "h": 268
+        },
+        "tabs": [
+          {
+            "name": "beta.txt",
+            "text": "beta.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 304,
+          "w": 541,
+          "h": 267
+        },
+        "tabs": []
+      }
+    ],
+    "terminals": [
+      {
+        "text": " panel-main",
+        "label": null
+      },
+      {
+        "text": "",
+        "label": null
+      }
+    ]
+  },
+  "local-1-clear": {
+    "groups": [
+      {
+        "rect": {
+          "x": 353,
+          "y": 36,
+          "w": 541,
+          "h": 831
+        },
+        "tabs": [
+          {
+            "name": "alpha.txt",
+            "text": "alpha.txt",
+            "selected": "false"
+          },
+          {
+            "name": "beta.txt",
+            "text": "beta.txt",
+            "selected": "false"
+          },
+          {
+            "name": "gamma.txt",
+            "text": "gamma.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 36,
+          "w": 541,
+          "h": 831
+        },
+        "tabs": [
+          {
+            "name": "round-1-after-reload, Editor Group 2",
+            "text": "round-1-after-reload",
+            "selected": "true"
+          }
+        ]
+      }
+    ],
+    "terminals": []
+  },
+  "remote-close-0-reload": {
+    "groups": [
+      {
+        "rect": {
+          "x": 353,
+          "y": 36,
+          "w": 786,
+          "h": 416
+        },
+        "tabs": [
+          {
+            "name": "beta.txt, Editor Group 1",
+            "text": "beta.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 353,
+          "y": 452,
+          "w": 786,
+          "h": 415
+        },
+        "tabs": [
+          {
+            "name": "bash, Editor Group 2",
+            "text": "bash",
+            "selected": "true"
+          }
+        ]
+      }
+    ],
+    "terminals": []
+  },
+  "remote-1-before": {
+    "groups": [
+      {
+        "rect": {
+          "x": 353,
+          "y": 36,
+          "w": 786,
+          "h": 416
+        },
+        "tabs": [
+          {
+            "name": "beta.txt, Editor Group 1",
+            "text": "beta.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 353,
+          "y": 452,
+          "w": 786,
+          "h": 415
+        },
+        "tabs": [
+          {
+            "name": "remote-panel-1, Editor Group 2",
+            "text": "remote-panel-1\ntmp",
+            "selected": "true"
+          }
+        ]
+      }
+    ],
+    "terminals": []
+  },
+  "mixed-1-reload": {
+    "groups": [
+      {
+        "rect": {
+          "x": 353,
+          "y": 36,
+          "w": 541,
+          "h": 535
+        },
+        "tabs": [
+          {
+            "name": "alpha.txt, Editor Group 1",
+            "text": "alpha.txt",
+            "selected": "false"
+          },
+          {
+            "name": "gamma.txt, Editor Group 1",
+            "text": "gamma.txt",
+            "selected": "false"
+          },
+          {
+            "name": "panel-other, Editor Group 1",
+            "text": "panel-other",
+            "selected": "false"
+          },
+          {
+            "name": "moved-panel-1, Editor Group 1",
+            "text": "moved-panel-1",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 36,
+          "w": 541,
+          "h": 268
+        },
+        "tabs": [
+          {
+            "name": "beta.txt",
+            "text": "beta.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 304,
+          "w": 541,
+          "h": 267
+        },
+        "tabs": []
+      }
+    ],
+    "terminals": [
+      {
+        "text": " panel-main",
+        "label": null
+      },
+      {
+        "text": "",
+        "label": null
+      }
+    ]
+  },
+  "inactive-0-before": {
+    "groups": [
+      {
+        "rect": {
+          "x": 353,
+          "y": 36,
+          "w": 541,
+          "h": 535
+        },
+        "tabs": [
+          {
+            "name": "alpha.txt, Editor Group 1",
+            "text": "alpha.txt",
+            "selected": "false"
+          },
+          {
+            "name": "gamma.txt, Editor Group 1",
+            "text": "gamma.txt",
+            "selected": "false"
+          },
+          {
+            "name": "panel-other, Editor Group 1",
+            "text": "panel-other",
+            "selected": "false"
+          },
+          {
+            "name": "inactive-editor-0, Editor Group 1",
+            "text": "inactive-editor-0",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 36,
+          "w": 541,
+          "h": 268
+        },
+        "tabs": [
+          {
+            "name": "beta.txt",
+            "text": "beta.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 304,
+          "w": 541,
+          "h": 267
+        },
+        "tabs": []
+      }
+    ],
+    "terminals": [
+      {
+        "text": "\u250c  panel-main",
+        "label": null
+      },
+      {
+        "text": "\u251c  split-repro-1",
+        "label": null
+      },
+      {
+        "text": "\u2514  split-repro-0",
+        "label": null
+      },
+      {
+        "text": "",
+        "label": null
+      }
+    ]
+  },
+  "local-3-clear": {
+    "groups": [
+      {
+        "rect": {
+          "x": 353,
+          "y": 36,
+          "w": 541,
+          "h": 831
+        },
+        "tabs": [
+          {
+            "name": "alpha.txt",
+            "text": "alpha.txt",
+            "selected": "false"
+          },
+          {
+            "name": "beta.txt",
+            "text": "beta.txt",
+            "selected": "false"
+          },
+          {
+            "name": "gamma.txt",
+            "text": "gamma.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 36,
+          "w": 541,
+          "h": 831
+        },
+        "tabs": [
+          {
+            "name": "round-3-after-reload, Editor Group 2",
+            "text": "round-3-after-reload",
+            "selected": "true"
+          }
+        ]
+      }
+    ],
+    "terminals": []
+  },
+  "remote-2-relaunch": {
+    "groups": [
+      {
+        "rect": {
+          "x": 353,
+          "y": 36,
+          "w": 786,
+          "h": 416
+        },
+        "tabs": [
+          {
+            "name": "beta.txt, Editor Group 1",
+            "text": "beta.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 353,
+          "y": 452,
+          "w": 786,
+          "h": 415
+        },
+        "tabs": [
+          {
+            "name": "remote-renamed-2, Editor Group 2",
+            "text": "remote-renamed-2",
+            "selected": "true"
+          }
+        ]
+      }
+    ],
+    "terminals": []
+  },
+  "split-0-before": {
+    "groups": [
+      {
+        "rect": {
+          "x": 353,
+          "y": 36,
+          "w": 541,
+          "h": 535
+        },
+        "tabs": [
+          {
+            "name": "alpha.txt, Editor Group 1",
+            "text": "alpha.txt",
+            "selected": "false"
+          },
+          {
+            "name": "gamma.txt, Editor Group 1",
+            "text": "gamma.txt",
+            "selected": "false"
+          },
+          {
+            "name": "panel-other, Editor Group 1",
+            "text": "panel-other",
+            "selected": "false"
+          },
+          {
+            "name": "mixed-final-1, Editor Group 1",
+            "text": "mixed-final-1",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 36,
+          "w": 541,
+          "h": 268
+        },
+        "tabs": [
+          {
+            "name": "beta.txt",
+            "text": "beta.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 304,
+          "w": 541,
+          "h": 267
+        },
+        "tabs": []
+      }
+    ],
+    "terminals": [
+      {
+        "text": "\u250c  panel-main",
+        "label": null
+      },
+      {
+        "text": "\u2514  split-repro-0",
+        "label": null
+      },
+      {
+        "text": "",
+        "label": null
+      }
+    ]
+  },
+  "remote-0-before": {
+    "groups": [
+      {
+        "rect": {
+          "x": 353,
+          "y": 36,
+          "w": 786,
+          "h": 416
+        },
+        "tabs": [
+          {
+            "name": "beta.txt, Editor Group 1",
+            "text": "beta.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 353,
+          "y": 452,
+          "w": 786,
+          "h": 415
+        },
+        "tabs": [
+          {
+            "name": "remote-panel-0, Editor Group 2",
+            "text": "remote-panel-0\ntmp",
+            "selected": "true"
+          }
+        ]
+      }
+    ],
+    "terminals": []
+  },
+  "inactive-0-renamed": {
+    "groups": [
+      {
+        "rect": {
+          "x": 353,
+          "y": 36,
+          "w": 541,
+          "h": 535
+        },
+        "tabs": [
+          {
+            "name": "alpha.txt, Editor Group 1",
+            "text": "alpha.txt",
+            "selected": "false"
+          },
+          {
+            "name": "gamma.txt, Editor Group 1",
+            "text": "gamma.txt",
+            "selected": "false"
+          },
+          {
+            "name": "panel-other, Editor Group 1",
+            "text": "panel-other",
+            "selected": "false"
+          },
+          {
+            "name": "inactive-editor-0, Editor Group 1",
+            "text": "inactive-editor-0",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 36,
+          "w": 541,
+          "h": 268
+        },
+        "tabs": [
+          {
+            "name": "beta.txt",
+            "text": "beta.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 304,
+          "w": 541,
+          "h": 267
+        },
+        "tabs": []
+      }
+    ],
+    "terminals": [
+      {
+        "text": "\u250c  panel-main",
+        "label": null
+      },
+      {
+        "text": "\u251c  split-repro-1",
+        "label": null
+      },
+      {
+        "text": "\u2514  split-repro-0",
+        "label": null
+      },
+      {
+        "text": "",
+        "label": null
+      }
+    ]
+  },
+  "double-1-reopen": {
+    "groups": [
+      {
+        "rect": {
+          "x": 353,
+          "y": 36,
+          "w": 541,
+          "h": 535
+        },
+        "tabs": [
+          {
+            "name": "alpha.txt, Editor Group 1",
+            "text": "alpha.txt",
+            "selected": "false"
+          },
+          {
+            "name": "gamma.txt, Editor Group 1",
+            "text": "gamma.txt",
+            "selected": "false"
+          },
+          {
+            "name": "panel-other, Editor Group 1",
+            "text": "panel-other",
+            "selected": "false"
+          },
+          {
+            "name": "double-restore-1, Editor Group 1",
+            "text": "double-restore-1",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 36,
+          "w": 541,
+          "h": 268
+        },
+        "tabs": [
+          {
+            "name": "beta.txt",
+            "text": "beta.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 304,
+          "w": 541,
+          "h": 267
+        },
+        "tabs": []
+      }
+    ],
+    "terminals": [
+      {
+        "text": "\u250c  panel-main",
+        "label": null
+      },
+      {
+        "text": "\u251c  split-repro-1",
+        "label": null
+      },
+      {
+        "text": "\u2514  split-repro-0",
+        "label": null
+      },
+      {
+        "text": "",
+        "label": null
+      }
+    ]
+  },
+  "split-1-before": {
+    "groups": [
+      {
+        "rect": {
+          "x": 353,
+          "y": 36,
+          "w": 541,
+          "h": 535
+        },
+        "tabs": [
+          {
+            "name": "alpha.txt, Editor Group 1",
+            "text": "alpha.txt",
+            "selected": "false"
+          },
+          {
+            "name": "gamma.txt, Editor Group 1",
+            "text": "gamma.txt",
+            "selected": "false"
+          },
+          {
+            "name": "panel-other, Editor Group 1",
+            "text": "panel-other",
+            "selected": "false"
+          },
+          {
+            "name": "bash, Editor Group 1",
+            "text": "bash",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 36,
+          "w": 541,
+          "h": 268
+        },
+        "tabs": [
+          {
+            "name": "beta.txt",
+            "text": "beta.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 304,
+          "w": 541,
+          "h": 267
+        },
+        "tabs": []
+      }
+    ],
+    "terminals": [
+      {
+        "text": "\u250c  panel-main",
+        "label": null
+      },
+      {
+        "text": "\u251c  split-repro-1",
+        "label": null
+      },
+      {
+        "text": "\u2514  split-repro-0",
+        "label": null
+      },
+      {
+        "text": "",
+        "label": null
+      }
+    ]
+  },
+  "remote-close-0-reopen": {
+    "groups": [
+      {
+        "rect": {
+          "x": 353,
+          "y": 36,
+          "w": 786,
+          "h": 416
+        },
+        "tabs": [
+          {
+            "name": "beta.txt, Editor Group 1",
+            "text": "beta.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 353,
+          "y": 452,
+          "w": 786,
+          "h": 415
+        },
+        "tabs": [
+          {
+            "name": "remote-reopen-0, Editor Group 2",
+            "text": "remote-reopen-0",
+            "selected": "true"
+          }
+        ]
+      }
+    ],
+    "terminals": []
+  },
+  "local-3-reopen-resumed": {
+    "groups": [
+      {
+        "rect": {
+          "x": 353,
+          "y": 36,
+          "w": 541,
+          "h": 831
+        },
+        "tabs": [
+          {
+            "name": "alpha.txt",
+            "text": "alpha.txt",
+            "selected": "false"
+          },
+          {
+            "name": "beta.txt",
+            "text": "beta.txt",
+            "selected": "false"
+          },
+          {
+            "name": "gamma.txt",
+            "text": "gamma.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 36,
+          "w": 541,
+          "h": 831
+        },
+        "tabs": [
+          {
+            "name": "saved-3, Editor Group 2",
+            "text": "saved-3",
+            "selected": "true"
+          }
+        ]
+      }
+    ],
+    "terminals": []
+  },
+  "remote-close-0-before": {
+    "groups": [
+      {
+        "rect": {
+          "x": 353,
+          "y": 36,
+          "w": 786,
+          "h": 416
+        },
+        "tabs": [
+          {
+            "name": "beta.txt, Editor Group 1",
+            "text": "beta.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 353,
+          "y": 452,
+          "w": 786,
+          "h": 415
+        },
+        "tabs": [
+          {
+            "name": "remote-reopen-0, Editor Group 2",
+            "text": "remote-reopen-0",
+            "selected": "true"
+          }
+        ]
+      }
+    ],
+    "terminals": []
+  },
+  "local-2-reload": {
+    "groups": [
+      {
+        "rect": {
+          "x": 353,
+          "y": 36,
+          "w": 541,
+          "h": 831
+        },
+        "tabs": [
+          {
+            "name": "alpha.txt",
+            "text": "alpha.txt",
+            "selected": "false"
+          },
+          {
+            "name": "beta.txt",
+            "text": "beta.txt",
+            "selected": "false"
+          },
+          {
+            "name": "gamma.txt",
+            "text": "gamma.txt",
+            "selected": "true"
+          }
+        ]
+      },
+      {
+        "rect": {
+          "x": 894,
+          "y": 36,
+          "w": 541,
+          "h": 831
+        },
+        "tabs": [
+          {
+            "name": "round-2-final, Editor Group 2",
+            "text": "round-2-final\ntmp",
+            "selected": "true"
+          }
+        ]
+      }
+    ],
+    "terminals": []
+  }
+}
