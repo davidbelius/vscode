@@ -360,7 +360,7 @@ export class LocalTerminalBackend extends BaseTerminalBackend implements ITermin
 				const layoutInfo = this._storageService.get(TerminalStorageKeys.TerminalLayoutInfo, StorageScope.WORKSPACE);
 				if (layoutInfo) {
 					mark('code/terminal/willSetTerminalLayoutInfo');
-					await this._proxy.setTerminalLayoutInfo(JSON.parse(layoutInfo));
+					await this._proxy.setTerminalLayoutInfo({ ...JSON.parse(layoutInfo), isRevived: true });
 					mark('code/terminal/didSetTerminalLayoutInfo');
 					this._storageService.remove(TerminalStorageKeys.TerminalLayoutInfo, StorageScope.WORKSPACE);
 				}

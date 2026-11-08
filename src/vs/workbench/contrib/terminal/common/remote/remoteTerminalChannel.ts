@@ -281,12 +281,13 @@ export class RemoteTerminalChannelClient implements IPtyHostController {
 		return this._channel.call(RemoteTerminalChannelRequest.GetWslPath, [original, direction]);
 	}
 
-	setTerminalLayoutInfo(layout?: ITerminalsLayoutInfoById): Promise<void> {
+	setTerminalLayoutInfo(layout?: ITerminalsLayoutInfoById, isRevived?: boolean): Promise<void> {
 		const workspace = this._workspaceContextService.getWorkspace();
 		const args: ISetTerminalLayoutInfoArgs = {
 			workspaceId: workspace.id,
 			tabs: layout ? layout.tabs : [],
-			background: layout ? layout.background : null
+			background: layout ? layout.background : null,
+			isRevived
 		};
 		return this._channel.call<void>(RemoteTerminalChannelRequest.SetTerminalLayoutInfo, args);
 	}
