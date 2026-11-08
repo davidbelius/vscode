@@ -318,7 +318,14 @@ export class RemoteTerminalBackend extends BaseTerminalBackend implements ITermi
 			throw new Error(`Cannot call setActiveInstanceId when there is no remote`);
 		}
 
-		return this._remoteTerminalChannel.setTerminalLayoutInfo(layout);
+		await this._remoteTerminalChannel.setTerminalLayoutInfo(layout);
+		// The remote pty host keeps the layout in memory, but revived processes need the
+		// last client layout after the host or client exits.
+		if (layout) {
+			this._storageService.store(TerminalStorageKeys.TerminalLayoutInfo, JSON.stringify(layout), StorageScope.WORKSPACE, StorageTarget.MACHINE);
+		} else {
+			this._storageService.remove(TerminalStorageKeys.TerminalLayoutInfo, StorageScope.WORKSPACE);
+		}
 	}
 
 	async reduceConnectionGraceTime(): Promise<void> {
