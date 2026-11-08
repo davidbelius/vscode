@@ -50,7 +50,7 @@ export class RemoteTerminalBackendContribution implements IWorkbenchContribution
 	}
 }
 
-class RemoteTerminalBackend extends BaseTerminalBackend implements ITerminalBackend {
+export class RemoteTerminalBackend extends BaseTerminalBackend implements ITerminalBackend {
 	private readonly _ptys: Map<number, RemotePty> = new Map();
 
 	private readonly _whenConnected = new DeferredPromise<void>();
