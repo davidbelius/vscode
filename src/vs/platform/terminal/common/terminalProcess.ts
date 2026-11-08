@@ -33,6 +33,8 @@ export interface ISetTerminalLayoutInfoArgs {
 	workspaceId: string;
 	tabs: ITerminalTabLayoutInfoById[];
 	background: number[] | null;
+	/** The IDs came from terminal state saved before process revival. */
+	isRevived?: boolean;
 }
 
 export interface IGetTerminalLayoutInfoArgs {
