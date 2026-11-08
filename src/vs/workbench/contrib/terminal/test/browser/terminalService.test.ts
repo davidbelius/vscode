@@ -56,6 +56,7 @@ suite('Workbench - TerminalService', () => {
 	test('restored editor resize cannot replace saved remote layout before reconnect completes', () => runWithFakedTimers({}, async () => {
 		const layoutRead = new DeferredPromise<ITerminalsLayoutInfo | undefined>();
 		const dimensionsChanged = store.add(new Emitter<void>());
+		const disposed = store.add(new Emitter<ITerminalInstance>());
 		const instanceCreated = store.add(new Emitter<ITerminalInstance>());
 		const savedLayouts: (ITerminalsLayoutInfoById | undefined)[] = [];
 		const backend = upcastPartial<ITerminalBackend>({
@@ -77,7 +78,7 @@ suite('Workbench - TerminalService', () => {
 			onDidFocus: Event.None,
 			onRequestAddInstanceToGroup: Event.None,
 			onDidChangeShellType: Event.None,
-			onDisposed: Event.None,
+			onDisposed: disposed.event,
 			capabilities: upcastPartial<ITerminalInstance['capabilities']>({ onDidAddCapability: Event.None, has: () => false })
 		});
 		instanceCreated.fire(editor);
@@ -94,9 +95,17 @@ suite('Workbench - TerminalService', () => {
 		const groupService = instantiationService.get(ITerminalGroupService) as TestTerminalGroupService;
 		groupService.groups = [group];
 		groupService.activeGroup = group;
-		dimensionsChanged.fire();
 		await timeout(500);
 		deepStrictEqual(savedLayouts, [{ tabs: [group.getLayoutInfo(true)], background: [] }]);
+		groupService.groups = [];
+		groupService.activeGroup = undefined;
+		dimensionsChanged.fire();
+		await timeout(500);
+		deepStrictEqual(savedLayouts, [
+			{ tabs: [group.getLayoutInfo(true)], background: [] },
+			{ tabs: [], background: [] }
+		]);
+		disposed.fire(editor);
 	}));
 
 	suite('background terminals', () => {
