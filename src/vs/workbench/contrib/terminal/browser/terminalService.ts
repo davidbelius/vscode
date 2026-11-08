@@ -86,6 +86,7 @@ export class TerminalService extends Disposable implements ITerminalService {
 	get isProcessSupportRegistered(): boolean { return !!this._processSupportContextKey.get(); }
 
 	private _connectionState: TerminalConnectionState = TerminalConnectionState.Connecting;
+	private _saveStateRequestedWhileConnecting = false;
 	get connectionState(): TerminalConnectionState { return this._connectionState; }
 
 	private readonly _whenConnected = new DeferredPromise<void>();
@@ -447,6 +448,10 @@ export class TerminalService extends Disposable implements ITerminalService {
 		this._connectionState = TerminalConnectionState.Connected;
 		this._onDidChangeConnectionState.fire();
 		this._logService.trace('Pty host ready');
+		if (this._saveStateRequestedWhileConnecting) {
+			this._saveStateRequestedWhileConnecting = false;
+			this._saveState();
+		}
 	}
 
 	private async _reconnectToRemoteTerminals(): Promise<void> {
@@ -727,6 +732,10 @@ export class TerminalService extends Disposable implements ITerminalService {
 			return;
 		}
 		if (!this._terminalConfigurationService.config.enablePersistentSessions) {
+			return;
+		}
+		if (this._connectionState === TerminalConnectionState.Connecting) {
+			this._saveStateRequestedWhileConnecting = true;
 			return;
 		}
 		const tabs = this._terminalGroupService.groups.map(g => g.getLayoutInfo(g === this._terminalGroupService.activeGroup));

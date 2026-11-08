@@ -3,20 +3,22 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { fail, strictEqual } from 'assert';
-import { timeout } from '../../../../../base/common/async.js';
-import { Emitter } from '../../../../../base/common/event.js';
+import { deepStrictEqual, fail, strictEqual } from 'assert';
+import { DeferredPromise, timeout } from '../../../../../base/common/async.js';
+import { Emitter, Event } from '../../../../../base/common/event.js';
+import { upcastPartial } from '../../../../../base/test/common/mock.js';
 import { runWithFakedTimers } from '../../../../../base/test/common/timeTravelScheduler.js';
 import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../base/test/common/utils.js';
 import { TestConfigurationService } from '../../../../../platform/configuration/test/common/testConfigurationService.js';
 import { IDialogService } from '../../../../../platform/dialogs/common/dialogs.js';
 import { TestDialogService } from '../../../../../platform/dialogs/test/common/testDialogService.js';
-import { TerminalLocation, TitleEventSource, type ITerminalBackend, type TerminalIcon } from '../../../../../platform/terminal/common/terminal.js';
-import { ITerminalInstance, ITerminalInstanceService, ITerminalService } from '../../browser/terminal.js';
+import { TerminalLocation, TitleEventSource, type ITerminalBackend, type ITerminalsLayoutInfo, type ITerminalsLayoutInfoById, type TerminalIcon } from '../../../../../platform/terminal/common/terminal.js';
+import { ITerminalGroupService, ITerminalInstance, ITerminalInstanceService, ITerminalService, TerminalConnectionState, type ITerminalGroup } from '../../browser/terminal.js';
 import { TerminalService } from '../../browser/terminalService.js';
-import { TERMINAL_CONFIG_SECTION } from '../../common/terminal.js';
+import { ITerminalProfileService, TERMINAL_CONFIG_SECTION } from '../../common/terminal.js';
 import { IRemoteAgentService } from '../../../../services/remote/common/remoteAgentService.js';
-import { workbenchInstantiationService } from '../../../../test/browser/workbenchTestServices.js';
+import { IWorkbenchEnvironmentService } from '../../../../services/environment/common/environmentService.js';
+import { TestEnvironmentService, TestTerminalGroupService, workbenchInstantiationService } from '../../../../test/browser/workbenchTestServices.js';
 import type { IConfigurationChangeEvent } from '../../../../../platform/configuration/common/configuration.js';
 
 suite('Workbench - TerminalService', () => {
@@ -50,6 +52,61 @@ suite('Workbench - TerminalService', () => {
 		terminalService = store.add(instantiationService.createInstance(TerminalService));
 		instantiationService.stub(ITerminalService, terminalService);
 	});
+
+	test('restored editor resize cannot replace saved remote layout before reconnect completes', () => runWithFakedTimers({}, async () => {
+		const layoutRead = new DeferredPromise<ITerminalsLayoutInfo | undefined>();
+		const dimensionsChanged = store.add(new Emitter<void>());
+		const disposed = store.add(new Emitter<ITerminalInstance>());
+		const instanceCreated = store.add(new Emitter<ITerminalInstance>());
+		const savedLayouts: (ITerminalsLayoutInfoById | undefined)[] = [];
+		const backend = upcastPartial<ITerminalBackend>({
+			onDidRequestDetach: Event.None,
+			getTerminalLayoutInfo: () => layoutRead.p,
+			reduceConnectionGraceTime: async () => { },
+			setTerminalLayoutInfo: async layout => { savedLayouts.push(layout); }
+		});
+		const remoteEnvironment = Object.create(TestEnvironmentService) as IWorkbenchEnvironmentService;
+		Object.defineProperty(remoteEnvironment, 'remoteAuthority', { value: 'test-remote' });
+		instantiationService.stub(IWorkbenchEnvironmentService, remoteEnvironment);
+		instantiationService.stub(ITerminalInstanceService, 'getBackend', async () => backend);
+		instantiationService.stub(ITerminalInstanceService, 'onDidCreateInstance', instanceCreated.event);
+		instantiationService.stub(ITerminalProfileService, 'refreshAvailableProfiles', () => { });
+		const reconnectingService = store.add(instantiationService.createInstance(TerminalService));
+		reconnectingService.registerProcessSupport(true);
+		const editor = upcastPartial<ITerminalInstance>({
+			onDimensionsChanged: dimensionsChanged.event,
+			onDidFocus: Event.None,
+			onRequestAddInstanceToGroup: Event.None,
+			onDidChangeShellType: Event.None,
+			onDisposed: disposed.event,
+			capabilities: upcastPartial<ITerminalInstance['capabilities']>({ onDidAddCapability: Event.None, has: () => false })
+		});
+		instanceCreated.fire(editor);
+		dimensionsChanged.fire();
+		await timeout(500);
+		strictEqual(reconnectingService.connectionState, TerminalConnectionState.Connecting);
+		deepStrictEqual(savedLayouts, []);
+
+		layoutRead.complete(undefined);
+		await reconnectingService.whenConnected;
+		const group = upcastPartial<ITerminalGroup>({
+			getLayoutInfo: () => ({ isActive: true, activePersistentProcessId: 2, terminals: [{ terminal: 1, relativeSize: 0.4 }, { terminal: 2, relativeSize: 0.6 }] })
+		});
+		const groupService = instantiationService.get(ITerminalGroupService) as TestTerminalGroupService;
+		groupService.groups = [group];
+		groupService.activeGroup = group;
+		await timeout(500);
+		deepStrictEqual(savedLayouts, [{ tabs: [group.getLayoutInfo(true)], background: [] }]);
+		groupService.groups = [];
+		groupService.activeGroup = undefined;
+		dimensionsChanged.fire();
+		await timeout(500);
+		deepStrictEqual(savedLayouts, [
+			{ tabs: [group.getLayoutInfo(true)], background: [] },
+			{ tabs: [], background: [] }
+		]);
+		disposed.fire(editor);
+	}));
 
 	suite('background terminals', () => {
 		test('should remove disposed hidden terminals and their listeners', async () => {
