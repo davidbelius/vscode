@@ -78,15 +78,16 @@ suite('PtyService', () => {
 		await service.reviveTerminalProcesses('workspace', [upcastPartial<ISerializedTerminalState>({
 			id: 40,
 			shellLaunchConfig: {},
-			processDetails: { cwd: '/test', workspaceId: 'workspace', workspaceName: 'test', title: 'revived editor', titleSource: TitleEventSource.Api },
-			processLaunchConfig: { env: {}, executableEnv: {}, options: {} },
+			processDetails: upcastPartial<ISerializedTerminalState['processDetails']>({ cwd: '/test', workspaceId: 'workspace', workspaceName: 'test', title: 'revived editor', titleSource: TitleEventSource.Api }),
+			processLaunchConfig: { env: {}, executableEnv: {}, options: upcastPartial<ISerializedTerminalState['processLaunchConfig']['options']>({}) },
 			unicodeVersion: '6',
-			replayEvent: { events: [{ cols: 80, rows: 24, data: '' }] }
+			replayEvent: upcastPartial<ISerializedTerminalState['replayEvent']>({ events: [{ cols: 80, rows: 24, data: '' }] })
 		})], 'en');
 		// Editor restoration looks up its new id independently of panel layout restoration.
 		deepStrictEqual(await service.getRevivedPtyNewId('workspace', 40), 1);
 		const ptys: Map<number, object> = Reflect.get(service, '_ptys');
-		for (const id of [40, 41]) {
+		// Both the old editor's revived target and the current panel ID are live.
+		for (const id of [1, 40, 41]) {
 			ptys.set(id, {
 				pid: 1000 + id, title: `panel-${id}`, titleSource: TitleEventSource.Api,
 				workspaceId: 'workspace', workspaceName: 'test',
@@ -99,7 +100,7 @@ suite('PtyService', () => {
 		const results = [];
 		for (let i = 0; i < 2; i++) {
 			const layout = await service.getTerminalLayoutInfo({ workspaceId: 'workspace' });
-			results.push(layout?.tabs.map(tab => ({ active: tab.activePersistentProcessId, terminals: tab.terminals.map(t => ({ id: t.terminal.id, title: t.terminal.title, size: t.relativeSize })) })));
+			results.push(layout?.tabs.map(tab => ({ active: tab.activePersistentProcessId, terminals: tab.terminals.map(t => ({ id: t.terminal?.id, title: t.terminal?.title, size: t.relativeSize })) })));
 		}
 		const expected = [{ active: 41, terminals: [{ id: 40, title: 'panel-40', size: 0.4 }, { id: 41, title: 'panel-41', size: 0.6 }] }];
 		deepStrictEqual({ results, editorRevivalId: await service.getRevivedPtyNewId('workspace', 40) }, { results: [expected, expected], editorRevivalId: 1 });
