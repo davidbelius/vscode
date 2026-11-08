@@ -18,3 +18,20 @@ The historical local attempt has c80fa056fa2 (publish remote layout after reviva
 ## Placement and approach
 
 Create a new independent patch under vibecoded/layout/revived-terminal-layout-id-collision/{exploration,unit-test,fix}. It is distinct from custom-name initialization and tab-list orientation. Fix layout ID provenance/normalization at the PTY-service/backend boundary, preserving editor revival lookup and both local and remote restore paths. Avoid a global map clear or merely preferring any live ID: a current and historical ID can both resolve to live but different processes. Cover repeated reads, active split selection, background terminals and workspace isolation as warranted. Use a fresh implementation against the pinned baseline, informed by the existing revival design; do not import the old stack.
+
+## Persistent remote close/reopen follow-up (2026-11-08)
+
+The isolated Insiders fix a4bb9e17596 passed two reloads but lost a two-terminal panel split on the first graceful client close/reopen. The development server PID stayed 1644654. PTY logs show revival old IDs 1→4, 2→5, 3→6 followed by layout requests for missing old IDs 1 and 2. Document groups remained unchanged. Evidence is retained in the project’s unified-loop-20261108/remote-insiders-collision-cases.log and before/after screenshots/JSON.
+
+RemoteTerminalBackend.setTerminalLayoutInfo only sends the current layout to the server. Unlike LocalTerminalBackend, it never writes TerminalStorageKeys.TerminalLayoutInfo. Its revival path reads that key before republishing a historical layout with isRevived=true, so no publication occurs. The collision fix deliberately moved historical-ID normalization out of getTerminalLayoutInfo to publication time; this exposed the missing remote producer. A persistent server retains the old layout in memory, but its terminal IDs have changed after client-close revival.
+
+Regression 85e700a06cb on the unit-test branch constructs real remote backend instances around shared storage/channel fixtures. It publishes a 40/60 split with active ID and background terminal, replaces the backend as a new client would, provides saved buffers, and asserts revival → historical-layout publication → layout lookup. Verified red: the historical publication is absent. Production export of RemoteTerminalBackend exists solely to enable normal constructor-based testing.
+
+Research after the red test:
+
+- https://github.com/microsoft/vscode/blob/main/src/vs/workbench/contrib/terminal/browser/remoteTerminalBackend.ts — current upstream still sends layout without storing it, while its revival path reads the missing key. No exact upstream implementation to cherry-pick was found.
+- https://github.com/microsoft/vscode/issues/135687 — related broad request to restore terminal layouts, not evidence of a fix for this handoff.
+- https://code.visualstudio.com/docs/terminal/advanced#_persistent-sessions — distinguishes reconnect on reload from process revival after restart. Server survival alone does not mean shell processes survive a graceful client close.
+- https://github.com/microsoft/vscode-remote-release/issues/11648 — different stale connection-token/server-restart issue; not applicable to this reproduction with a continuously running server.
+
+Placement decision: complete this existing patch's remote publication contract, rather than create a fifth patch or a super-patch. The failure is reproduced with this patch alone. Adapt the existing local backend's durable layout-storage pattern, test clearing the layout and ordinary reload without revival, and preserve the current-ID/historical-ID separation. Sol Medium implementation and parent review are required before acceptance. Local tests remain evidence for unchanged local behavior, but remote affected gates and the future remote combined gate must use the corrected revision.
