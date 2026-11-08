@@ -351,7 +351,7 @@ class RemoteTerminalBackend extends BaseTerminalBackend implements ITerminalBack
 				const layoutInfo = this._storageService.get(TerminalStorageKeys.TerminalLayoutInfo, StorageScope.WORKSPACE);
 				if (layoutInfo) {
 					mark('code/terminal/willSetTerminalLayoutInfoRemote');
-					await this._remoteTerminalChannel.setTerminalLayoutInfo(JSON.parse(layoutInfo));
+					await this._remoteTerminalChannel.setTerminalLayoutInfo(JSON.parse(layoutInfo), true);
 					mark('code/terminal/didSetTerminalLayoutInfoRemote');
 					this._storageService.remove(TerminalStorageKeys.TerminalLayoutInfo, StorageScope.WORKSPACE);
 				}

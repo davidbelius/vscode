@@ -23,16 +23,21 @@ import { IWorkspaceContextService } from '../../../../../../platform/workspace/c
 import { IEnvironmentVariableService } from '../../../common/environmentVariable.js';
 import { EnvironmentVariableService } from '../../../common/environmentVariableService.js';
 import { ITerminalLogService, type ITerminalProcessOptions } from '../../../../../../platform/terminal/common/terminal.js';
+import type { ISetTerminalLayoutInfoArgs } from '../../../../../../platform/terminal/common/terminalProcess.js';
 import { RemoteTerminalChannelClient, type ICreateTerminalProcessArguments } from '../../../common/remote/remoteTerminalChannel.js';
 import { RemoteTerminalChannelRequest } from '../../../common/remote/terminal.js';
 import type { ICompleteTerminalConfiguration } from '../../../common/terminal.js';
 
 class CapturingChannel implements IChannel {
 	createRequest: ICreateTerminalProcessArguments | undefined;
+	layoutRequest: ISetTerminalLayoutInfoArgs | undefined;
 
 	call<T>(command: string, arg?: unknown): Promise<T> {
 		if (command === RemoteTerminalChannelRequest.CreateProcess && isCreateTerminalProcessArguments(arg)) {
 			this.createRequest = arg;
+		}
+		if (command === RemoteTerminalChannelRequest.SetTerminalLayoutInfo) {
+			this.layoutRequest = arg as ISetTerminalLayoutInfoArgs;
 		}
 		return Promise.resolve(undefined!);
 	}
@@ -56,7 +61,8 @@ suite('RemoteTerminalChannelClient', () => {
 		instantiationService.stub(IWorkbenchConfigurationService, {
 			whenRemoteConfigurationLoaded: async () => { }
 		});
-		instantiationService.stub(IWorkspaceContextService, new TestContextService());
+		const workspaceContextService = new TestContextService();
+		instantiationService.stub(IWorkspaceContextService, workspaceContextService);
 		instantiationService.stub(IConfigurationResolverService, {
 			resolveAsync: async () => {
 				throw new Error('No configuration variables are resolved by this focused request test');
@@ -107,6 +113,11 @@ suite('RemoteTerminalChannelClient', () => {
 
 		const channel = new CapturingChannel();
 		const client = instantiationService.createInstance(RemoteTerminalChannelClient, 'ssh-remote+target-host', channel);
+		const layout = { tabs: [{ isActive: true, activePersistentProcessId: 7, terminals: [{ terminal: 7, relativeSize: 1 }] }], background: [8] };
+		await client.setTerminalLayoutInfo(layout, true);
+		deepStrictEqual(channel.layoutRequest, { workspaceId: workspaceContextService.getWorkspace().id, ...layout, isRevived: true });
+		await client.setTerminalLayoutInfo(layout);
+		deepStrictEqual(channel.layoutRequest, { workspaceId: workspaceContextService.getWorkspace().id, ...layout, isRevived: undefined });
 		const configuration: ICompleteTerminalConfiguration = {
 			'terminal.integrated.env.windows': {},
 			'terminal.integrated.env.osx': {},

@@ -17,6 +17,7 @@ import { ExtensionIdentifier, type IExtensionDescription } from '../../../../../
 import { IProductService } from '../../../../../platform/product/common/productService.js';
 import { EnvironmentVariableMutatorType, type ISerializableEnvironmentVariableCollections } from '../../../../../platform/terminal/common/environmentVariable.js';
 import { ILocalPtyService, ITerminalChildProcess, ITerminalLogService, type ISerializedTerminalState } from '../../../../../platform/terminal/common/terminal.js';
+import type { ISetTerminalLayoutInfoArgs } from '../../../../../platform/terminal/common/terminalProcess.js';
 import { IWorkspaceContextService } from '../../../../../platform/workspace/common/workspace.js';
 import { IExtensionService } from '../../../../services/extensions/common/extensions.js';
 import { IConfigurationResolverService } from '../../../../services/configurationResolver/common/configurationResolver.js';
@@ -104,8 +105,9 @@ suite('LocalTerminalBackend', () => {
 		});
 	});
 
-	test('revival refreshes both the environment and collection options before sending persisted state to the pty host', async () => {
+	test('revival refreshes the environment and marks the saved layout for the pty host', async () => {
 		let revivedState: ISerializedTerminalState[] | undefined;
+		let restoredLayout: ISetTerminalLayoutInfoArgs | undefined;
 		const instantiationService = store.add(new TestInstantiationService());
 		const storageService = store.add(new TestStorageService());
 		const logService = new RecordingLogService();
@@ -151,6 +153,7 @@ suite('LocalTerminalBackend', () => {
 			reviveTerminalProcesses: async (_workspaceId, state) => {
 				revivedState = state;
 			},
+			setTerminalLayoutInfo: async args => { restoredLayout = args; },
 			getTerminalLayoutInfo: async () => undefined
 		}));
 
@@ -176,14 +179,17 @@ suite('LocalTerminalBackend', () => {
 				}
 			}]
 		}), StorageScope.WORKSPACE, StorageTarget.MACHINE);
+		storageService.store(TerminalStorageKeys.TerminalLayoutInfo, JSON.stringify({ workspaceId: 'workspace', tabs: [{ isActive: true, activePersistentProcessId: 1, terminals: [{ terminal: 1, relativeSize: 1 }] }], background: [] }), StorageScope.WORKSPACE, StorageTarget.MACHINE);
 
 		const backend = store.add(instantiationService.createInstance(LocalTerminalBackend));
 		await backend.getTerminalLayoutInfo();
 		deepStrictEqual({
 			revivedStateLength: revivedState?.length,
+			restoredLayout,
 			warnings: logService.warnings
 		}, {
 			revivedStateLength: 1,
+			restoredLayout: { workspaceId: 'workspace', tabs: [{ isActive: true, activePersistentProcessId: 1, terminals: [{ terminal: 1, relativeSize: 1 }] }], background: [], isRevived: true },
 			warnings: []
 		});
 		if (!revivedState) {

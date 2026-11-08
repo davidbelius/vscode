@@ -99,7 +99,7 @@ export class PtyService extends Disposable implements IPtyService {
 	declare readonly _serviceBrand: undefined;
 
 	private readonly _ptys: Map<number, PersistentTerminalProcess> = new Map();
-	private readonly _workspaceLayoutInfos = new Map<WorkspaceId, ISetTerminalLayoutInfoArgs>();
+	private readonly _workspaceLayoutInfos = new Map<WorkspaceId, { layout: ISetTerminalLayoutInfoArgs; revivedPtyIds: Set<number> }>();
 	private readonly _detachInstanceRequestStore: RequestStore<IProcessDetails | undefined, { workspaceId: string; instanceId: number }>;
 	private readonly _revivedPtyIdMap: Map<string, { newId: number; state: ISerializedTerminalState }> = new Map();
 
@@ -580,18 +580,52 @@ export class PtyService extends Disposable implements IPtyService {
 
 	@traceRpc
 	async setTerminalLayoutInfo(args: ISetTerminalLayoutInfoArgs): Promise<void> {
-		this._workspaceLayoutInfos.set(args.workspaceId, args);
+		if (!args.isRevived) {
+			this._workspaceLayoutInfos.set(args.workspaceId, { layout: args, revivedPtyIds: new Set() });
+			return;
+		}
+
+		// Only a saved layout uses historical IDs. Resolve them at publication time so a
+		// later, current layout cannot be confused with retained editor revival lookups.
+		const revivedPtyIds = new Set<number>();
+		const usedRevivalKeys = new Set<string>();
+		const resolve = (id: number): number | undefined => {
+			const key = this._getRevivingProcessId(args.workspaceId, id);
+			const newId = this._revivedPtyIdMap.get(key)?.newId;
+			if (newId !== undefined) {
+				revivedPtyIds.add(newId);
+				usedRevivalKeys.add(key);
+			}
+			return newId;
+		};
+		const tabs = args.tabs.map(tab => ({
+			...tab,
+			activePersistentProcessId: tab.activePersistentProcessId === undefined ? undefined : resolve(tab.activePersistentProcessId),
+			terminals: tab.terminals.flatMap(t => {
+				const id = resolve(t.terminal);
+				return id === undefined ? [] : [{ ...t, terminal: id }];
+			})
+		}));
+		const background = args.background?.flatMap(id => {
+			const revivedId = resolve(id);
+			return revivedId === undefined ? [] : [revivedId];
+		}) ?? null;
+		for (const key of usedRevivalKeys) {
+			this._revivedPtyIdMap.delete(key);
+		}
+		this._workspaceLayoutInfos.set(args.workspaceId, { layout: { ...args, tabs, background, isRevived: false }, revivedPtyIds });
 	}
 
 	@traceRpc
 	async getTerminalLayoutInfo(args: IGetTerminalLayoutInfoArgs): Promise<ITerminalsLayoutInfo | undefined> {
 		performance.mark('code/willGetTerminalLayoutInfo');
-		const layout = this._workspaceLayoutInfos.get(args.workspaceId);
-		if (layout) {
+		const stored = this._workspaceLayoutInfos.get(args.workspaceId);
+		if (stored) {
+			const { layout, revivedPtyIds } = stored;
 			const doneSet: Set<number> = new Set();
-			const expandedTabs = await Promise.all(layout.tabs.map(async tab => this._expandTerminalTab(args.workspaceId, tab, doneSet)));
+			const expandedTabs = await Promise.all(layout.tabs.map(async tab => this._expandTerminalTab(tab, doneSet, revivedPtyIds)));
 			const tabs = expandedTabs.filter(t => t.terminals.length > 0);
-			const expandedBackground = (await Promise.all(layout.background?.map(b => this._expandTerminalInstance(args.workspaceId, b, doneSet)) ?? [])).filter(b => b.terminal !== null).map(b => b.terminal);
+			const expandedBackground = (await Promise.all(layout.background?.map(b => this._expandTerminalInstance(b, doneSet, revivedPtyIds)) ?? [])).filter(b => b.terminal !== null).map(b => b.terminal);
 			performance.mark('code/didGetTerminalLayoutInfo');
 			return { tabs, background: expandedBackground };
 		}
@@ -599,8 +633,8 @@ export class PtyService extends Disposable implements IPtyService {
 		return undefined;
 	}
 
-	private async _expandTerminalTab(workspaceId: string, tab: ITerminalTabLayoutInfoById, doneSet: Set<number>): Promise<ITerminalTabLayoutInfoDto> {
-		const expandedTerminals = (await Promise.all(tab.terminals.map(t => this._expandTerminalInstance(workspaceId, t, doneSet))));
+	private async _expandTerminalTab(tab: ITerminalTabLayoutInfoById, doneSet: Set<number>, revivedPtyIds: Set<number>): Promise<ITerminalTabLayoutInfoDto> {
+		const expandedTerminals = (await Promise.all(tab.terminals.map(t => this._expandTerminalInstance(t, doneSet, revivedPtyIds))));
 		const filtered = expandedTerminals.filter(term => term.terminal !== null) as IRawTerminalInstanceLayoutInfo<IProcessDetails>[];
 		return {
 			isActive: tab.isActive,
@@ -609,21 +643,19 @@ export class PtyService extends Disposable implements IPtyService {
 		};
 	}
 
-	private async _expandTerminalInstance(workspaceId: string, t: ITerminalInstanceLayoutInfoById | number, doneSet: Set<number>): Promise<IRawTerminalInstanceLayoutInfo<IProcessDetails | null>> {
+	private async _expandTerminalInstance(t: ITerminalInstanceLayoutInfoById | number, doneSet: Set<number>, revivedPtyIds: Set<number>): Promise<IRawTerminalInstanceLayoutInfo<IProcessDetails | null>> {
 		const hasLayout = !isNumber(t);
 		const ptyId = hasLayout ? t.terminal : t;
 		try {
-			const oldId = this._getRevivingProcessId(workspaceId, ptyId);
-			const revivedPtyId = this._revivedPtyIdMap.get(oldId)?.newId;
-			this._logService.info(`Expanding terminal instance, old id ${oldId} -> new id ${revivedPtyId}`);
-			this._revivedPtyIdMap.delete(oldId);
-			const persistentProcessId = revivedPtyId ?? ptyId;
+			const persistentProcessId = ptyId;
+			// Skip the orphan check on the first read of a revived process only.
+			const wasRevived = revivedPtyIds.delete(ptyId);
 			if (doneSet.has(persistentProcessId)) {
 				throw new Error(`Terminal ${persistentProcessId} has already been expanded`);
 			}
 			doneSet.add(persistentProcessId);
 			const persistentProcess = this._throwIfNoPty(persistentProcessId);
-			const processDetails = persistentProcess && await this._buildProcessDetails(ptyId, persistentProcess, revivedPtyId !== undefined);
+			const processDetails = persistentProcess && await this._buildProcessDetails(ptyId, persistentProcess, wasRevived);
 			return {
 				terminal: { ...processDetails, id: persistentProcessId },
 				relativeSize: hasLayout ? t.relativeSize : 0
