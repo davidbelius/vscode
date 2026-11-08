@@ -54,13 +54,26 @@ suite('RemoteTerminalBackend', () => {
 		};
 		const first = createBackend();
 		await first.setTerminalLayoutInfo(layout);
+		await first.getTerminalLayoutInfo();
+		deepStrictEqual(storage.get(TerminalStorageKeys.TerminalLayoutInfo, StorageScope.WORKSPACE), JSON.stringify(layout));
 		first.dispose();
 		// Closing saves buffers; the server survives but the processes must be revived.
 		storage.store(TerminalStorageKeys.TerminalBufferState, JSON.stringify({ version: 1, state: [{ id: 1 }, { id: 2 }, { id: 3 }] }), StorageScope.WORKSPACE, StorageTarget.MACHINE);
 		await createBackend().getTerminalLayoutInfo();
 		deepStrictEqual(calls, [
-			{ layout, isRevived: false }, 'revive', { layout, isRevived: true }, 'get'
+			{ layout, isRevived: false }, 'get', 'revive', { layout, isRevived: true }, 'get'
 		]);
 		deepStrictEqual(storage.get(TerminalStorageKeys.TerminalLayoutInfo, StorageScope.WORKSPACE), undefined);
+
+		// Clearing the layout must also clear the saved copy before a later revival.
+		const second = createBackend();
+		await second.setTerminalLayoutInfo(layout);
+		await second.setTerminalLayoutInfo(undefined);
+		deepStrictEqual(storage.get(TerminalStorageKeys.TerminalLayoutInfo, StorageScope.WORKSPACE), undefined);
+		storage.store(TerminalStorageKeys.TerminalBufferState, JSON.stringify({ version: 1, state: [{ id: 1 }] }), StorageScope.WORKSPACE, StorageTarget.MACHINE);
+		await second.getTerminalLayoutInfo();
+		deepStrictEqual(calls.slice(-4), [
+			{ layout, isRevived: false }, { layout: undefined, isRevived: false }, 'revive', 'get'
+		]);
 	});
 });
