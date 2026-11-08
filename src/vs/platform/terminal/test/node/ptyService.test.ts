@@ -12,6 +12,7 @@ import { upcastPartial } from '../../../../base/test/common/mock.js';
 import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../base/test/common/utils.js';
 import { NullLogService } from '../../../log/common/log.js';
 import { IProductService } from '../../../product/common/productService.js';
+import { ISerializedTerminalState, TitleEventSource } from '../../common/terminal.js';
 import { PtyService, XtermSerializer } from '../../node/ptyService.js';
 
 suite('XtermSerializer', () => {
@@ -68,6 +69,41 @@ suite('XtermSerializer', () => {
 
 suite('PtyService', () => {
 	const store = ensureNoDisposablesAreLeakedInTestSuite();
+
+	test('current panel layout does not consume a retained editor revival mapping with a colliding id', async () => {
+		const service = store.add(new PtyService(new NullLogService(), upcastPartial<IProductService>({}), { graceTime: 60000, shortGraceTime: 6000, scrollback: 100 }, 0));
+		const sandbox = createSandbox();
+		store.add(toDisposable(() => sandbox.restore()));
+		sandbox.stub(service, 'createProcess').resolves(1);
+		await service.reviveTerminalProcesses('workspace', [upcastPartial<ISerializedTerminalState>({
+			id: 40,
+			shellLaunchConfig: {},
+			processDetails: { cwd: '/test', workspaceId: 'workspace', workspaceName: 'test', title: 'revived editor', titleSource: TitleEventSource.Api },
+			processLaunchConfig: { env: {}, executableEnv: {}, options: {} },
+			unicodeVersion: '6',
+			replayEvent: { events: [{ cols: 80, rows: 24, data: '' }] }
+		})], 'en');
+		// Editor restoration looks up its new id independently of panel layout restoration.
+		deepStrictEqual(await service.getRevivedPtyNewId('workspace', 40), 1);
+		const ptys: Map<number, object> = Reflect.get(service, '_ptys');
+		for (const id of [40, 41]) {
+			ptys.set(id, {
+				pid: 1000 + id, title: `panel-${id}`, titleSource: TitleEventSource.Api,
+				workspaceId: 'workspace', workspaceName: 'test',
+				getCwd: async () => '/test', isOrphaned: async () => true,
+				processLaunchOptions: { options: { shellIntegration: { nonce: 'test-nonce' } } },
+				shellLaunchConfig: {}, shutdown: () => { }
+			});
+		}
+		await service.setTerminalLayoutInfo({ workspaceId: 'workspace', tabs: [{ isActive: true, activePersistentProcessId: 41, terminals: [{ terminal: 40, relativeSize: 0.4 }, { terminal: 41, relativeSize: 0.6 }] }], background: null });
+		const results = [];
+		for (let i = 0; i < 2; i++) {
+			const layout = await service.getTerminalLayoutInfo({ workspaceId: 'workspace' });
+			results.push(layout?.tabs.map(tab => ({ active: tab.activePersistentProcessId, terminals: tab.terminals.map(t => ({ id: t.terminal.id, title: t.terminal.title, size: t.relativeSize })) })));
+		}
+		const expected = [{ active: 41, terminals: [{ id: 40, title: 'panel-40', size: 0.4 }, { id: 41, title: 'panel-41', size: 0.6 }] }];
+		deepStrictEqual({ results, editorRevivalId: await service.getRevivedPtyNewId('workspace', 40) }, { results: [expected, expected], editorRevivalId: 1 });
+	});
 
 	test('attachToProcess only attaches when the expected pid matches', async () => {
 		const service = store.add(new PtyService(new NullLogService(), upcastPartial<IProductService>({}), { graceTime: 60000, shortGraceTime: 6000, scrollback: 100 }, 0));
