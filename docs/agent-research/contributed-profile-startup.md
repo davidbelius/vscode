@@ -1,0 +1,15 @@
+# Late contributed terminal profile: exploration (2026-11-09)
+
+Baseline: `f405fe233bbd3fd0647968e9356c2816362b2b3d` (Insiders). This branch records research and placement only; it contains no production patch or test build.
+
+## Red regression and owner
+
+The regression commit `99b3521503d90c392e16bb7ead2c0384be564490` adds `TerminalProfileService > Contributed Profiles > late terminal contribution refreshes profiles after extension-list event` in `terminalProfileService.integrationTest.ts`. On the release baseline it failed with 0 passing, 1 failing: `contributedProfiles` retained only JavaScript Debug Terminal after a late `Tmux Native Persistent` contribution. The existing contributed-profile control passed. The source manifest contributes `terminal.profiles` with ID `tmuxNativeProfile.persistent` and title `Tmux Native Persistent`, plus `onTerminalProfile:tmuxNativeProfile.persistent`; an icon is optional under the source validator.
+
+The baseline [TerminalContributionService](https://github.com/microsoft/vscode/blob/main/src/vs/workbench/contrib/terminal/common/terminalExtensionPoints.ts) replaces `terminalProfiles` when the extension-point handler runs, yet emits only a completion-provider change event. [TerminalProfileService](https://github.com/microsoft/vscode/blob/main/src/vs/workbench/contrib/terminal/browser/terminalProfileService.ts) subscribes to extension-list changes and has no terminal-profile contribution change subscription. The late contribution can therefore arrive after the list event without triggering a refresh. The regression and service diagnosis are recorded in workspace reports `extension-loop-20261109/cold-profile-unit-regression.json` and `cold-profile-research.json`.
+
+VS Code's [terminal contribution documentation](https://code.visualstudio.com/api/references/contribution-points#contributes.terminal) says a declarative contributed profile appears in the profile selector; its [activation-event documentation](https://code.visualstudio.com/api/references/activation-events#onTerminalProfile) says the extension activates when that profile is launched. The profile must thus be discoverable before provider activation. [Issue #207335](https://github.com/microsoft/vscode/issues/207335) concerns `workbench.action.terminal.newWithProfile` programmatic lookup of a contributed profile; it is related, but does not describe this late contribution refresh failure.
+
+## Placement decision
+
+The red test reproduces on the recorded release baseline with no demonstrated interaction with the previous seven patches. Treat this as new independent patch 8 in VS Code terminal profile discovery (`TerminalContributionService` and `TerminalProfileService`), not as an extension startup workaround or an interaction super-patch. A dedicated profile-contribution change event and profile-service subscription are the scoped direction, preserving lazy `onTerminalProfile` activation. No directly applicable upstream fix was established by the recorded search. Revalidate against the red regression and existing contributed-profile control before combined UI stress.
