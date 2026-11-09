@@ -223,13 +223,19 @@ export class LocalTerminalBackend extends BaseTerminalBackend implements ITermin
 
 	async attachToProcess(id: number, pid?: number): Promise<ITerminalChildProcess | undefined> {
 		await this._connectToDirectProxy();
+		return this._attachToProcess(id, pid, true);
+	}
+
+	private async _attachToProcess(id: number, pid: number | undefined, logFailure: boolean): Promise<ITerminalChildProcess | undefined> {
 		try {
 			await this._proxy.attachToProcess(id, pid);
 			const pty = new LocalPty(id, true, this._proxy);
 			this._ptys.set(id, pty);
 			return pty;
 		} catch (e) {
-			this._logService.warn(`Couldn't attach to process ${e.message}`);
+			if (logFailure) {
+				this._logService.warn(`Couldn't attach to process ${e.message}`);
+			}
 		}
 		return undefined;
 	}
@@ -237,12 +243,20 @@ export class LocalTerminalBackend extends BaseTerminalBackend implements ITermin
 	async attachToRevivedProcess(id: number, pid: number): Promise<ITerminalChildProcess | undefined> {
 		await this._connectToDirectProxy();
 		try {
+			// A current process can reuse an old ID while a revival mapping still exists.
+			// The saved OS pid identifies it without attaching to the mapped process first.
+			if (pid > 0) {
+				const current = await this._attachToProcess(id, pid, false);
+				if (current) {
+					return current;
+				}
+			}
 			const newId = await this._proxy.getRevivedPtyNewId(this._getWorkspaceId(), id);
 			if (newId !== undefined) {
-				return await this.attachToProcess(newId);
+				return await this._attachToProcess(newId, undefined, true);
 			}
 			// The original ID may belong to another window's process after a pty host restart
-			return await this.attachToProcess(id, pid > 0 ? pid : undefined);
+			return pid > 0 ? undefined : await this._attachToProcess(id, undefined, true);
 		} catch (e) {
 			this._logService.warn(`Couldn't attach to process ${e.message}`);
 		}

@@ -41,7 +41,7 @@ class RecordingLogService extends NullLogService {
 suite('LocalTerminalBackend', () => {
 	const store = ensureNoDisposablesAreLeakedInTestSuite();
 
-	test('attachToRevivedProcess only falls back to the original process when it still has the saved pid', async () => {
+	test('attachToRevivedProcess prefers a matching current process over a retained revival mapping', async () => {
 		const livePids = new Map([[1, 101], [2, 202], [3, 303], [6, 606]]);
 		const revivedIds = new Map([[7, 1], [2, 2], [8, 5], [6, 1]]);
 		const attachRequests: [id: number, pid: number | undefined][] = [];
@@ -88,17 +88,21 @@ suite('LocalTerminalBackend', () => {
 			revivedButMissing: await attach(() => backend.attachToRevivedProcess(8, 8008)),
 			originalWithSavedPid: await attach(() => backend.attachToRevivedProcess(3, 303)),
 			currentIdCollidesWithRevivalMapping: await attach(() => backend.attachToRevivedProcess(6, 606)),
+			currentIdHasOtherPid: await attach(() => backend.attachToRevivedProcess(6, 6006)),
+			currentIdHasUnknownSavedPid: await attach(() => backend.attachToRevivedProcess(6, 0)),
 			originalWithOtherPid: await attach(() => backend.attachToRevivedProcess(3, 9009)),
 			originalWithUnknownPid: await attach(() => backend.attachToRevivedProcess(3, 0)),
 			originalWithNegativePid: await attach(() => backend.attachToRevivedProcess(3, -1)),
 			originalMissing: await attach(() => backend.attachToRevivedProcess(4, 404)),
 			attachById: await attach(() => backend.attachToProcess(3)),
 		}, {
-			revivedWithNewId: { attachedId: 1, requests: [[1, undefined]] },
-			revivedWithSameId: { attachedId: 2, requests: [[2, undefined]] },
-			revivedButMissing: { attachedId: undefined, requests: [[5, undefined]] },
+			revivedWithNewId: { attachedId: 1, requests: [[7, 7007], [1, undefined]] },
+			revivedWithSameId: { attachedId: 2, requests: [[2, 2002], [2, undefined]] },
+			revivedButMissing: { attachedId: undefined, requests: [[8, 8008], [5, undefined]] },
 			originalWithSavedPid: { attachedId: 3, requests: [[3, 303]] },
 			currentIdCollidesWithRevivalMapping: { attachedId: 6, requests: [[6, 606]] },
+			currentIdHasOtherPid: { attachedId: 1, requests: [[6, 6006], [1, undefined]] },
+			currentIdHasUnknownSavedPid: { attachedId: 1, requests: [[1, undefined]] },
 			originalWithOtherPid: { attachedId: undefined, requests: [[3, 9009]] },
 			originalWithUnknownPid: { attachedId: 3, requests: [[3, undefined]] },
 			originalWithNegativePid: { attachedId: 3, requests: [[3, undefined]] },
