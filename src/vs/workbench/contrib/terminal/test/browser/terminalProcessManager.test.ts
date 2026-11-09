@@ -73,6 +73,7 @@ class TestTerminalChildProcess implements ITerminalChildProcess {
 class TestTerminalInstanceService implements Partial<ITerminalInstanceService> {
 	readonly ptyHostRestartEmitter = new Emitter<void>();
 	readonly revivedAttachArgs: [id: number, pid: number][] = [];
+	readonly directAttachArgs: number[] = [];
 	readonly createdProcesses: TestTerminalChildProcess[] = [];
 	readonly createProcessRequests: { env: IProcessEnvironment; options: ITerminalProcessOptions }[] = [];
 	refuseRevivedAttach = false;
@@ -98,6 +99,10 @@ class TestTerminalInstanceService implements Partial<ITerminalInstanceService> {
 				const childProcess = new TestTerminalChildProcess(shouldPersist);
 				childProcess.id = this.createdProcesses.push(childProcess);
 				return childProcess;
+			},
+			attachToProcess: async (id: number) => {
+				this.directAttachArgs.push(id);
+				return new TestTerminalChildProcess(true);
 			},
 			attachToRevivedProcess: async (id: number, pid: number) => {
 				this.revivedAttachArgs.push([id, pid]);
@@ -354,6 +359,29 @@ suite('Workbench - TerminalProcessManager', () => {
 				}, 1, 1, false);
 				strictEqual(p, undefined);
 				strictEqual(manager.shouldPersist, false);
+			});
+			setup(() => instantiationService.stub(IRemoteAgentService, {
+				getEnvironment: async () => upcastPartial<IRemoteAgentEnvironment>({ os: OperatingSystem.Linux, userHome: URI.file('/home/test') })
+			}));
+
+			test('revived remote editor resolves its saved process ID before attaching', async () => {
+				const remoteManager = store.add(instantiationService.createInstance(TerminalProcessManager, 4,
+					URI.from({ scheme: Schemas.vscodeRemote, authority: 'ssh-remote+test', path: '/workspace' }), undefined, undefined));
+				await remoteManager.createProcess({
+					attachPersistentProcess: { id: 21, pid: 72265, findRevivedId: true, title: 'zsh', titleSource: TitleEventSource.Process, cwd: '', shellIntegrationNonce: '' }
+				}, 80, 24, false);
+				deepStrictEqual({ revived: terminalInstanceService.revivedAttachArgs, direct: terminalInstanceService.directAttachArgs },
+					{ revived: [[21, 72265]], direct: [] });
+			});
+
+			test('current remote process ID attaches without revival lookup', async () => {
+				const remoteManager = store.add(instantiationService.createInstance(TerminalProcessManager, 5,
+					URI.from({ scheme: Schemas.vscodeRemote, authority: 'ssh-remote+test', path: '/workspace' }), undefined, undefined));
+				await remoteManager.createProcess({
+					attachPersistentProcess: { id: 21, pid: 72265, title: 'zsh', titleSource: TitleEventSource.Process, cwd: '', shellIntegrationNonce: '' }
+				}, 80, 24, false);
+				deepStrictEqual({ revived: terminalInstanceService.revivedAttachArgs, direct: terminalInstanceService.directAttachArgs },
+					{ revived: [], direct: [21] });
 			});
 		});
 	});
