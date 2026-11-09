@@ -200,8 +200,8 @@ export class RemoteTerminalChannelClient implements IPtyHostController {
 	acceptDetachInstanceReply(requestId: number, persistentProcessId: number): Promise<void> {
 		return this._channel.call(RemoteTerminalChannelRequest.AcceptDetachInstanceReply, [requestId, persistentProcessId]);
 	}
-	attachToProcess(id: number): Promise<void> {
-		return this._channel.call(RemoteTerminalChannelRequest.AttachToProcess, [id]);
+	attachToProcess(id: number, pid?: number): Promise<void> {
+		return this._channel.call(RemoteTerminalChannelRequest.AttachToProcess, [id, pid]);
 	}
 	detachFromProcess(id: number, forcePersist?: boolean): Promise<void> {
 		return this._channel.call(RemoteTerminalChannelRequest.DetachFromProcess, [id, forcePersist]);
@@ -321,7 +321,7 @@ export class RemoteTerminalChannelClient implements IPtyHostController {
 	}
 
 	getRevivedPtyNewId(id: number): Promise<number | undefined> {
-		return this._channel.call(RemoteTerminalChannelRequest.GetRevivedPtyNewId, [id]);
+		return this._channel.call(RemoteTerminalChannelRequest.GetRevivedPtyNewId, [this._workspaceContextService.getWorkspace().id, id]);
 	}
 
 	serializeTerminalState(ids: number[]): Promise<string> {

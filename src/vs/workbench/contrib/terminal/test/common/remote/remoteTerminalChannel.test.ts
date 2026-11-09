@@ -31,8 +31,10 @@ import type { ICompleteTerminalConfiguration } from '../../../common/terminal.js
 class CapturingChannel implements IChannel {
 	createRequest: ICreateTerminalProcessArguments | undefined;
 	layoutRequest: ISetTerminalLayoutInfoArgs | undefined;
+	readonly calls: { command: string; arg: unknown }[] = [];
 
 	call<T>(command: string, arg?: unknown): Promise<T> {
+		this.calls.push({ command, arg });
 		if (command === RemoteTerminalChannelRequest.CreateProcess && isCreateTerminalProcessArguments(arg)) {
 			this.createRequest = arg;
 		}
@@ -157,5 +159,13 @@ suite('RemoteTerminalChannelClient', () => {
 
 		await client.createProcess({}, configuration, undefined, { ...options, environmentVariableCollections: undefined }, false, 80, 24, '6', OperatingSystem.Linux);
 		deepStrictEqual(channel.createRequest?.envVariableCollections, []);
+
+		const workspaceId = instantiationService.get(IWorkspaceContextService).getWorkspace().id;
+		await client.getRevivedPtyNewId(21);
+		await client.attachToProcess(21, 72265);
+		deepStrictEqual(channel.calls.slice(-2), [
+			{ command: RemoteTerminalChannelRequest.GetRevivedPtyNewId, arg: [workspaceId, 21] },
+			{ command: RemoteTerminalChannelRequest.AttachToProcess, arg: [21, 72265] }
+		]);
 	});
 });
