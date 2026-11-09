@@ -1,0 +1,35 @@
+{
+  "name": "tmux-native-profile",
+  "displayName": "Tmux Native Profile",
+  "description": "Prototype persistent tmux terminal profile for VS Code",
+  "publisher": "vibecoded",
+  "version": "0.0.1",
+  "license": "MIT",
+  "private": true,
+  "engines": { "vscode": "^1.96.0" },
+  "main": "./extension.js",
+  "extensionKind": ["workspace"],
+  "capabilities": { "untrustedWorkspaces": { "supported": false } },
+  "activationEvents": [
+    "onTerminalProfile:tmuxNativeProfile.persistent",
+    "onCommand:tmuxNativeProfile.newTerminal",
+    "onCommand:tmuxNativeProfile.terminateSession"
+  ],
+  "contributes": {
+    "terminal": { "profiles": [{ "id": "tmuxNativeProfile.persistent", "title": "Tmux Native Persistent" }] },
+    "commands": [
+      { "command": "tmuxNativeProfile.newTerminal", "title": "Tmux Native Profile: New Persistent Terminal" },
+      { "command": "tmuxNativeProfile.terminateSession", "title": "Tmux Native Profile: Terminate Session" }
+    ],
+    "configuration": {
+      "title": "Tmux Native Profile",
+      "properties": {
+        "tmuxNativeProfile.tmuxPath": {
+          "type": "string", "default": "tmux",
+          "description": "tmux executable path. A bare name is resolved to an absolute path before a terminal is created."
+        }
+      }
+    }
+  },
+  "scripts": { "test": "node --test test/*.test.js" }
+}
