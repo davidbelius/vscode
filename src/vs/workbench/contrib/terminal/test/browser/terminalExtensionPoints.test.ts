@@ -4,8 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { deepStrictEqual, strictEqual } from 'assert';
+import * as sinon from 'sinon';
 import { ITerminalContributions } from '../../../../../platform/terminal/common/terminal.js';
-import { ExtensionPoint, ExtensionsRegistry, IExtensionPointUser } from '../../../../services/extensions/common/extensionsRegistry.js';
+import { ExtensionPoint, ExtensionPointUserDelta, ExtensionsRegistry, IExtensionPointHandler, IExtensionPointUser } from '../../../../services/extensions/common/extensionsRegistry.js';
 import { TerminalContributionService } from '../../common/terminalExtensionPoints.js';
 
 suite('TerminalContributionService', () => {
@@ -14,26 +15,34 @@ suite('TerminalContributionService', () => {
 		if (!point) {
 			throw new Error('terminal extension point is not registered');
 		}
-		point.acceptUsers([]);
-		const service = new TerminalContributionService();
-		let changes = 0;
-		const listener = service.onDidChangeTerminalProfiles(() => changes++);
-		const profile = { id: 'tmuxNativeProfile.persistent', title: 'Tmux Native Persistent' };
-		const user = {
-			description: { identifier: { value: 'vibecoded.tmux-native-profile' } },
-			value: { profiles: [profile] },
-			collector: { error() { }, warn() { }, info() { } }
-		} as unknown as IExtensionPointUser<ITerminalContributions>;
+		let handler: IExtensionPointHandler<ITerminalContributions> | undefined;
+		const stub = sinon.stub(point, 'setHandler').callsFake(callback => {
+			handler = callback;
+			return { dispose() { } };
+		});
+		let listener: { dispose(): void } | undefined;
 		try {
-			point.acceptUsers([user]);
+			const service = new TerminalContributionService();
+			if (!handler) {
+				throw new Error('terminal contribution handler was not registered');
+			}
+			let changes = 0;
+			listener = service.onDidChangeTerminalProfiles(() => changes++);
+			const profile = { id: 'tmuxNativeProfile.persistent', title: 'Tmux Native Persistent' };
+			const user = {
+				description: { identifier: { value: 'vibecoded.tmux-native-profile' } },
+				value: { profiles: [profile] },
+				collector: { error() { }, warn() { }, info() { } }
+			} as unknown as IExtensionPointUser<ITerminalContributions>;
+			handler([user], new ExtensionPointUserDelta([user], []));
 			strictEqual(changes, 1);
 			deepStrictEqual(service.terminalProfiles, [{ ...profile, extensionIdentifier: 'vibecoded.tmux-native-profile' }]);
-			point.acceptUsers([]);
+			handler([], new ExtensionPointUserDelta([], [user]));
 			strictEqual(changes, 2);
 			deepStrictEqual(service.terminalProfiles, []);
 		} finally {
-			point.acceptUsers([]);
-			listener.dispose();
+			listener?.dispose();
+			stub.restore();
 		}
 	});
 });
