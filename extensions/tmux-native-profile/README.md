@@ -46,3 +46,31 @@ The earlier [Terminal Sessions extension](https://github.com/visul/terminal-sess
 informed the problem analysis. This prototype uses no code from that extension.
 
 Run tests with Node 24 and `npm test`. There are no runtime dependencies.
+
+## Prototype validation and current limit
+
+This is an experimental prototype, not a completed remote-restoration solution.
+It was tested against the project's six-patch VS Code builds:
+Insiders `114b011ca29bc4bcc451ba63d81cae447789671a` and
+Stable `30f0762e0a7c43405d4b6856152473121016718b`.
+
+- Local Insiders and Stable each passed three reloads and four real graceful
+  close/reopen cycles, using panel and editor terminals, both creation routes,
+  renaming, moving, and duplicate custom names. Each run recorded 20 keyboard
+  identity proofs; original tmux pane shells and foreground `top` processes
+  survived the client exits.
+- Persistent Remote Insiders passed both initial reloads, but its first
+  close/reopen restored the editor terminal as plain Bash. The original tmux
+  session and running program survived, and the panel reattached correctly.
+  The saved VS Code state contains the correct tmux launch arguments for both
+  terminals. Native remote editor restoration attempts the obsolete PTY ID;
+  its remapping RPC also omits the workspace ID required by the server.
+- Remote Stable and Remote SSH validation have not been reached. Stock unpatched
+  VS Code has not been qualified by these prototype runs.
+- Eight extension tests pass, including concurrent session allocation on the
+  standard tmux server, ownership filtering, missing-session behavior, remote
+  workspace paths, and cancellation cleanup.
+
+The remote editor failure needs a separate VS Code fix. This prototype does not
+recreate tabs or inject attachment commands to work around it. Process survival
+requires the tmux server to remain alive; machine-reboot recovery is outside scope.
