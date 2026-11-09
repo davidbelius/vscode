@@ -273,6 +273,31 @@ suite('TerminalProfileService', () => {
 			deepStrictEqual(terminalProfileService.availableProfiles, [powershellProfile]);
 			deepStrictEqual(terminalProfileService.contributedProfiles, [jsdebugProfile]);
 		});
+		test('removing a terminal contribution removes its discovered profile', async () => {
+			await terminalProfileService.refreshAndAwaitAvailableProfiles();
+			deepStrictEqual(terminalProfileService.contributedProfiles, [jsdebugProfile]);
+			terminalContributionService.setProfiles([]);
+			await terminalProfileService.hasRefreshedProfiles;
+			deepStrictEqual(terminalProfileService.contributedProfiles, []);
+		});
+
+		test('unchanged contributions do not announce a profile change', async () => {
+			await terminalProfileService.refreshAndAwaitAvailableProfiles();
+			const calls: ITerminalProfile[][] = [];
+			store.add(terminalProfileService.onDidChangeAvailableProfiles(profiles => calls.push(profiles)));
+			terminalContributionService.setProfiles([jsdebugProfile]);
+			await terminalProfileService.hasRefreshedProfiles;
+			deepStrictEqual(calls, []);
+		});
+
+		test('disposing profile service unsubscribes from contribution changes', async () => {
+			await terminalProfileService.refreshAndAwaitAvailableProfiles();
+			const lastRefresh = terminalProfileService.hasRefreshedProfiles;
+			terminalProfileService.dispose();
+			terminalContributionService.setProfiles([]);
+			deepStrictEqual(terminalProfileService.hasRefreshedProfiles, lastRefresh);
+		});
+
 		test('late terminal contribution refreshes profiles after extension-list event', async () => {
 			await terminalProfileService.refreshAndAwaitAvailableProfiles();
 			deepStrictEqual(terminalProfileService.contributedProfiles, [jsdebugProfile]);
