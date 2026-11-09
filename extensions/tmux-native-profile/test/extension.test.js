@@ -4,9 +4,10 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const Module = require('node:module');
 
-test('profile cancellation does not leave a newly created session', async () => {
+test('activation creates no terminal and profile cancellation cleans its session', async () => {
   let provider;
   let createCount = 0;
+  let terminalCount = 0;
   const terminated = [];
   let finishCreate;
   const pending = new Promise(resolve => { finishCreate = resolve; });
@@ -19,7 +20,7 @@ test('profile cancellation does not leave a newly created session', async () => 
     window: {
       registerTerminalProfileProvider: (_id, value) => { provider = value; return { dispose() {} }; },
       showErrorMessage: async () => {},
-      createTerminal: () => ({ show() {} })
+      createTerminal: () => { terminalCount++; return { show() {} }; }
     },
     commands: { registerCommand: () => ({ dispose() {} }) },
     TerminalProfile: class { constructor(options) { this.options = options; } }
@@ -41,6 +42,7 @@ test('profile cancellation does not leave a newly created session', async () => 
     extension = require('../extension');
   } finally { Module._load = original; }
   extension.activate({ subscriptions: [] });
+  assert.equal(terminalCount, 0, 'activation must not open a terminal');
   assert.equal(await provider.provideTerminalProfile({ isCancellationRequested: true }), undefined);
   assert.equal(createCount, 0);
   const token = { isCancellationRequested: false };

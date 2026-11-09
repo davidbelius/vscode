@@ -64,8 +64,13 @@ test('real standard tmux server: foreign session remains and missing exact attac
     try { await execFile(executable, ['-L', 'default', 'kill-session', '-t', `=${foreign}`]); } catch { /* already gone */ }
   });
   await execFile(executable, ['-L', 'default', 'new-session', '-d', '-s', foreign, '-c', os.tmpdir()]);
-  const one = await manager.create(os.tmpdir()); created.push(one.name);
-  const two = await manager.create(os.tmpdir()); created.push(two.name);
+  // Start both creates together. Collect every successful identity before asserting,
+  // so cleanup still owns all new sessions if either operation fails.
+  const outcomes = await Promise.allSettled([manager.create(os.tmpdir()), manager.create(os.tmpdir())]);
+  for (const outcome of outcomes) if (outcome.status === 'fulfilled') created.push(outcome.value.name);
+  assert.deepEqual(outcomes.map(outcome => outcome.status), ['fulfilled', 'fulfilled']);
+  const [one, two] = outcomes.map(outcome => outcome.value);
+  assert.notEqual(one.name, two.name, 'concurrent allocation must give distinct identities');
   assert.deepEqual((await manager.list()).sort(), [one.name, two.name].sort());
   const before = await execFile(executable, ['-L', 'default', 'display-message', '-p', '-t', `=${two.name}:`, '#{pane_pid}']);
   await manager.terminate(one.name);
