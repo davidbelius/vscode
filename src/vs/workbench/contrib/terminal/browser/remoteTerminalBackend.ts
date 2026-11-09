@@ -50,7 +50,7 @@ export class RemoteTerminalBackendContribution implements IWorkbenchContribution
 	}
 }
 
-class RemoteTerminalBackend extends BaseTerminalBackend implements ITerminalBackend {
+export class RemoteTerminalBackend extends BaseTerminalBackend implements ITerminalBackend {
 	private readonly _ptys: Map<number, RemotePty> = new Map();
 
 	private readonly _whenConnected = new DeferredPromise<void>();
@@ -213,13 +213,13 @@ class RemoteTerminalBackend extends BaseTerminalBackend implements ITerminalBack
 		return pty;
 	}
 
-	async attachToProcess(id: number): Promise<ITerminalChildProcess | undefined> {
+	async attachToProcess(id: number, pid?: number): Promise<ITerminalChildProcess | undefined> {
 		if (!this._remoteTerminalChannel) {
 			throw new Error(`Cannot create remote terminal when there is no remote!`);
 		}
 
 		try {
-			await this._remoteTerminalChannel.attachToProcess(id);
+			await this._remoteTerminalChannel.attachToProcess(id, pid);
 			const pty = this._instantiationService.createInstance(RemotePty, id, true, this._remoteTerminalChannel);
 			this._ptys.set(id, pty);
 			return pty;
@@ -229,14 +229,25 @@ class RemoteTerminalBackend extends BaseTerminalBackend implements ITerminalBack
 		return undefined;
 	}
 
-	async attachToRevivedProcess(id: number): Promise<ITerminalChildProcess | undefined> {
+	async attachToRevivedProcess(id: number, pid: number): Promise<ITerminalChildProcess | undefined> {
 		if (!this._remoteTerminalChannel) {
 			throw new Error(`Cannot create remote terminal when there is no remote!`);
 		}
 
 		try {
-			const newId = await this._remoteTerminalChannel.getRevivedPtyNewId(id) ?? id;
-			return await this.attachToProcess(newId);
+			// A current process can reuse an old ID while a revival mapping still exists.
+			// Verify its saved OS pid before considering the mapped process.
+			if (pid > 0) {
+				const current = await this.attachToProcess(id, pid);
+				if (current) {
+					return current;
+				}
+			}
+			const newId = await this._remoteTerminalChannel.getRevivedPtyNewId(id);
+			if (newId !== undefined) {
+				return await this.attachToProcess(newId);
+			}
+			return pid > 0 ? undefined : await this.attachToProcess(id);
 		} catch (e) {
 			this._logService.trace(`Couldn't attach to process ${e.message}`);
 		}

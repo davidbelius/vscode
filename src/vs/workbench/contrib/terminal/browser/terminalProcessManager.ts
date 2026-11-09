@@ -292,7 +292,8 @@ export class TerminalProcessManager extends Disposable implements ITerminalProce
 
 				const shouldPersist = ((this._configurationService.getValue(TaskSettingId.Reconnection) && shellLaunchConfig.reconnectionProperties) || !shellLaunchConfig.isFeatureTerminal) && this._terminalConfigurationService.config.enablePersistentSessions && !shellLaunchConfig.isTransient;
 				if (shellLaunchConfig.attachPersistentProcess) {
-					const result = await backend.attachToProcess(shellLaunchConfig.attachPersistentProcess.id);
+					const { id, pid, findRevivedId } = shellLaunchConfig.attachPersistentProcess;
+					const result = findRevivedId ? await backend.attachToRevivedProcess(id, pid) : await backend.attachToProcess(id);
 					if (result) {
 						newProcess = result;
 						if (this._extEnvironmentVariableCollection) {
