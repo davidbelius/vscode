@@ -1,0 +1,88 @@
+{
+  "status": "passed",
+  "time": "2026-11-09T19:57:11.585146+00:00",
+  "patchFamilies": 6,
+  "matrix": [
+    {
+      "environment": "local",
+      "release": "Insiders",
+      "candidate": "114b011ca29bc4bcc451ba63d81cae447789671a",
+      "processEvidence": "process-loop-20261109/runs/local-insiders-60c3b34a/evidence.jsonl",
+      "processReloads": 14,
+      "keyboardProofs": 60,
+      "namingLayoutEvidence": "unified-loop-20261108/local-insiders-combined-20261109T145944037778Z-evidence.json",
+      "namingLayoutReloads": 32,
+      "namingLayoutCloseReopens": 32
+    },
+    {
+      "environment": "local",
+      "release": "Stable",
+      "candidate": "30f0762e0a7c43405d4b6856152473121016718b",
+      "processEvidence": "process-loop-20261109/runs/local-stable-a492b161/evidence.jsonl",
+      "processReloads": 14,
+      "keyboardProofs": 60,
+      "namingLayoutEvidence": "unified-loop-20261108/local-stable-combined-20261109T154006683603Z-evidence.json",
+      "namingLayoutReloads": 32,
+      "namingLayoutCloseReopens": 32
+    },
+    {
+      "environment": "Remote",
+      "release": "Insiders",
+      "candidate": "114b011ca29bc4bcc451ba63d81cae447789671a",
+      "processEvidence": "process-loop-20261109/runs/Remote-insiders-44415c10/evidence.jsonl",
+      "processReloads": 14,
+      "keyboardProofs": 60,
+      "namingLayoutEvidence": "unified-loop-20261108/remote-insiders-combined-20261109T163816084215Z-evidence.json",
+      "namingLayoutReloads": 32,
+      "namingLayoutCloseReopens": 32
+    },
+    {
+      "environment": "Remote",
+      "release": "Stable",
+      "candidate": "30f0762e0a7c43405d4b6856152473121016718b",
+      "processEvidence": "process-loop-20261109/runs/Remote-stable-52dc9890/evidence.jsonl",
+      "processReloads": 14,
+      "keyboardProofs": 60,
+      "namingLayoutEvidence": "unified-loop-20261108/remote-stable-combined-20261109T173135443951Z-evidence.json",
+      "namingLayoutReloads": 32,
+      "namingLayoutCloseReopens": 32
+    },
+    {
+      "environment": "Remote SSH",
+      "release": "Insiders",
+      "candidate": "114b011ca29bc4bcc451ba63d81cae447789671a",
+      "processEvidence": "process-loop-20261109/runs/Remote-SSH-insiders-6b64d915/evidence.jsonl",
+      "processReloads": 14,
+      "keyboardProofs": 60,
+      "namingLayoutEvidence": "unified-loop-20261108/ssh-insiders-combined-ssh-auto-20261109T183130892338Z-evidence.json",
+      "namingLayoutReloads": 32,
+      "namingLayoutCloseReopens": 32
+    },
+    {
+      "environment": "Remote SSH",
+      "release": "Stable",
+      "candidate": "30f0762e0a7c43405d4b6856152473121016718b",
+      "processEvidence": "process-loop-20261109/runs/Remote-SSH-stable-9e9a8fd1/evidence.jsonl",
+      "processReloads": 14,
+      "keyboardProofs": 60,
+      "namingLayoutEvidence": "unified-loop-20261108/ssh-stable-combined-ssh-auto-20261109T193056720337Z-evidence.json",
+      "namingLayoutReloads": 32,
+      "namingLayoutCloseReopens": 32
+    }
+  ],
+  "totals": {
+    "processReloads": 84,
+    "keyboardProofs": 360,
+    "namingLayoutReloads": 192,
+    "namingLayoutCloseReopens": 192
+  },
+  "limits": [
+    "Process identity/survival claims cover window reload only.",
+    "No Windows coverage.",
+    "Stable full typecheck retains three preexisting untouched Sinon test errors; focused combined suites pass (Insiders 161, Stable 158, two pending each).",
+    "Remote SSH Insiders uses official runtime 29ce94ad8d36c62affc08484e262d5c4fbdd0b3d with verified source overlays; runtime and source provenance are distinct.",
+    "Earlier harness failures and inconclusive fixtures remain recorded and are excluded from these totals.",
+    "The independent process patch intentionally omits the separate custom-name fix; naming failures there remain separately recorded."
+  ],
+  "coverage": "coverage.json"
+}
