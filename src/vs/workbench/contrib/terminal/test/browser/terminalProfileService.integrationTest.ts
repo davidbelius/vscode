@@ -208,7 +208,8 @@ suite('TerminalProfileService', () => {
 
 		terminalInstanceService.setProfiles(undefined, [powershellProfile]);
 		terminalInstanceService.setProfiles('fakeremote', []);
-		terminalContributionService.setProfiles([jsdebugProfile]);
+		// Existing profiles are already registered at this fixture's startup.
+		terminalContributionService.terminalProfiles = [jsdebugProfile];
 		if (isWindows) {
 			remoteAgentService.setEnvironment(OperatingSystem.Windows);
 		} else if (isLinux) {
