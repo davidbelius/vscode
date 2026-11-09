@@ -86,6 +86,7 @@ export class TerminalProfileService extends Disposable implements ITerminalProfi
 				this._profilesReadyBarrier = new AutoOpenBarrier(20000);
 				return this._profilesReadyBarrier.wait().then(() => { });
 			});
+		this._register(this._terminalContributionService.onDidChangeTerminalProfiles(() => this.refreshAvailableProfiles()));
 		this.refreshAvailableProfiles();
 		this._setupConfigListener();
 	}
