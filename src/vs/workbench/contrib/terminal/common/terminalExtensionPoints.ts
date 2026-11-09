@@ -23,6 +23,7 @@ export interface ITerminalContributionService {
 	readonly _serviceBrand: undefined;
 
 	readonly terminalProfiles: ReadonlyArray<IExtensionTerminalProfile>;
+	readonly onDidChangeTerminalProfiles: Event<void>;
 	readonly terminalCompletionProviders: ReadonlyArray<IExtensionTerminalCompletionProvider>;
 	readonly onDidChangeTerminalCompletionProviders: Event<void>;
 }
@@ -34,6 +35,9 @@ export class TerminalContributionService implements ITerminalContributionService
 
 	private _terminalProfiles: ReadonlyArray<IExtensionTerminalProfile> = [];
 	get terminalProfiles() { return this._terminalProfiles; }
+
+	private readonly _onDidChangeTerminalProfiles = new Emitter<void>();
+	readonly onDidChangeTerminalProfiles = this._onDidChangeTerminalProfiles.event;
 
 	private _terminalCompletionProviders: ReadonlyArray<IExtensionTerminalCompletionProvider> = [];
 	get terminalCompletionProviders() { return this._terminalCompletionProviders; }
@@ -58,6 +62,7 @@ export class TerminalContributionService implements ITerminalContributionService
 				}) || [];
 			}).flat();
 
+			this._onDidChangeTerminalProfiles.fire();
 			this._onDidChangeTerminalCompletionProviders.fire();
 		});
 	}
