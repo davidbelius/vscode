@@ -42,8 +42,8 @@ suite('LocalTerminalBackend', () => {
 	const store = ensureNoDisposablesAreLeakedInTestSuite();
 
 	test('attachToRevivedProcess only falls back to the original process when it still has the saved pid', async () => {
-		const livePids = new Map([[1, 101], [2, 202], [3, 303]]);
-		const revivedIds = new Map([[7, 1], [2, 2], [8, 5]]);
+		const livePids = new Map([[1, 101], [2, 202], [3, 303], [6, 606]]);
+		const revivedIds = new Map([[7, 1], [2, 2], [8, 5], [6, 1]]);
 		const attachRequests: [id: number, pid: number | undefined][] = [];
 
 		const instantiationService = store.add(new TestInstantiationService());
@@ -87,6 +87,7 @@ suite('LocalTerminalBackend', () => {
 			revivedWithSameId: await attach(() => backend.attachToRevivedProcess(2, 2002)),
 			revivedButMissing: await attach(() => backend.attachToRevivedProcess(8, 8008)),
 			originalWithSavedPid: await attach(() => backend.attachToRevivedProcess(3, 303)),
+			currentIdCollidesWithRevivalMapping: await attach(() => backend.attachToRevivedProcess(6, 606)),
 			originalWithOtherPid: await attach(() => backend.attachToRevivedProcess(3, 9009)),
 			originalWithUnknownPid: await attach(() => backend.attachToRevivedProcess(3, 0)),
 			originalWithNegativePid: await attach(() => backend.attachToRevivedProcess(3, -1)),
@@ -97,6 +98,7 @@ suite('LocalTerminalBackend', () => {
 			revivedWithSameId: { attachedId: 2, requests: [[2, undefined]] },
 			revivedButMissing: { attachedId: undefined, requests: [[5, undefined]] },
 			originalWithSavedPid: { attachedId: 3, requests: [[3, 303]] },
+			currentIdCollidesWithRevivalMapping: { attachedId: 6, requests: [[6, 606]] },
 			originalWithOtherPid: { attachedId: undefined, requests: [[3, 9009]] },
 			originalWithUnknownPid: { attachedId: 3, requests: [[3, undefined]] },
 			originalWithNegativePid: { attachedId: 3, requests: [[3, undefined]] },
