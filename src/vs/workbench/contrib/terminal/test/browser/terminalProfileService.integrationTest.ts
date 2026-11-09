@@ -93,14 +93,21 @@ class TestTerminalContributionService implements ITerminalContributionService {
 	terminalCompletionProviders: readonly import('../../common/terminalExtensionPoints.js').IExtensionTerminalCompletionProvider[] = [];
 	private _onDidChangeTerminalCompletionProviders = new Emitter<void>();
 	readonly onDidChangeTerminalCompletionProviders = this._onDidChangeTerminalCompletionProviders.event;
+	private _onDidChangeTerminalProfiles = new Emitter<void>();
+	readonly onDidChangeTerminalProfiles = this._onDidChangeTerminalProfiles.event;
 	setProfiles(profiles: IExtensionTerminalProfile[]): void {
 		this.terminalProfiles = profiles;
+		this._onDidChangeTerminalProfiles.fire();
 	}
 }
 
 class TestTerminalInstanceService implements Partial<ITerminalInstanceService> {
 	private _profiles: Map<string, ITerminalProfile[]> = new Map();
 	private _hasReturnedNone = true;
+	*getRegisteredBackends(): IterableIterator<ITerminalBackend> {
+		// The browser profile service requires a registered backend before detection.
+		yield {} as ITerminalBackend;
+	}
 	async getBackend(remoteAuthority: string | undefined): Promise<ITerminalBackend> {
 		return {
 			getProfiles: async () => {
@@ -155,6 +162,7 @@ suite('TerminalProfileService', () => {
 	let terminalProfileService: TestTerminalProfileService;
 	let remoteAgentService: TestRemoteAgentService;
 	let extensionService: TestTerminalExtensionService;
+	let terminalContributionService: TestTerminalContributionService;
 	let instantiationService: TestInstantiationService;
 
 	setup(async () => {
@@ -172,7 +180,7 @@ suite('TerminalProfileService', () => {
 		extensionService = new TestTerminalExtensionService();
 
 		const themeService = new TestThemeService();
-		const terminalContributionService = new TestTerminalContributionService();
+		terminalContributionService = new TestTerminalContributionService();
 
 		instantiationService.stub(IExtensionService, extensionService);
 		instantiationService.stub(IConfigurationService, configurationService);
@@ -264,6 +272,22 @@ suite('TerminalProfileService', () => {
 			await terminalProfileService.refreshAndAwaitAvailableProfiles();
 			deepStrictEqual(terminalProfileService.availableProfiles, [powershellProfile]);
 			deepStrictEqual(terminalProfileService.contributedProfiles, [jsdebugProfile]);
+		});
+		test('late terminal contribution refreshes profiles after extension-list event', async () => {
+			await terminalProfileService.refreshAndAwaitAvailableProfiles();
+			deepStrictEqual(terminalProfileService.contributedProfiles, [jsdebugProfile]);
+			// Cold startup can publish the extension-list event before the terminal
+			// extension point has delivered its contributed profiles.
+			extensionService._onDidChangeExtensions.fire();
+			await terminalProfileService.hasRefreshedProfiles;
+			const lateProfile: IExtensionTerminalProfile = {
+				extensionIdentifier: 'vibecoded.tmux-native-profile',
+				id: 'tmuxNativeProfile.persistent',
+				title: 'Tmux Native Persistent'
+			};
+			terminalContributionService.setProfiles([jsdebugProfile, lateProfile]);
+			await terminalProfileService.hasRefreshedProfiles;
+			deepStrictEqual(terminalProfileService.contributedProfiles, [jsdebugProfile, lateProfile]);
 		});
 	});
 
