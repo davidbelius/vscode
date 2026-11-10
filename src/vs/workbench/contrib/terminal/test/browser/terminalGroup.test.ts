@@ -112,7 +112,7 @@ suite('Workbench - TerminalGroup', () => {
 			persistentProcessId: index + 1,
 			shouldPersist: true
 		} as ITerminalInstance));
-		Reflect.set(group, '_terminalInstances', instances);
+		Reflect.set(group, '_terminalInstances', [...instances]);
 		group.setActiveInstanceByIndex(4);
 		group.resizePanes([0.12, 0.28, 0.2, 0.2, 0.2]);
 
