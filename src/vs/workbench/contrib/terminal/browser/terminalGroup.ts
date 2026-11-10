@@ -339,15 +339,22 @@ export class TerminalGroup extends Disposable implements ITerminalGroup {
 	}
 
 	getLayoutInfo(isActive: boolean): ITerminalTabLayoutInfoById {
-		const instances = this.terminalInstances.filter(instance => isNumber(instance.persistentProcessId) && instance.shouldPersist);
-		const totalSize = instances.map(t => this._splitPaneContainer?.getPaneSize(t) || 0).reduce((total, size) => total += size, 0);
+		const instances = this.terminalInstances
+			.map((instance, index) => ({ instance, index }))
+			.filter(({ instance }) => isNumber(instance.persistentProcessId) && instance.shouldPersist);
+		// A hidden restored group may have pending proportions but no measured pane sizes yet.
+		// Keep the original indexes when excluding nonpersistent terminals. If the group
+		// membership changed, use measured sizes for every pane instead of mixing units.
+		const pendingSizes = this._initialRelativeSizes?.length === this.terminalInstances.length ? this._initialRelativeSizes : undefined;
+		const sizes = instances.map(({ instance, index }) => pendingSizes?.[index] ?? this._splitPaneContainer?.getPaneSize(instance) ?? 0);
+		const totalSize = sizes.reduce((total, size) => total + size, 0);
 		return {
 			isActive: isActive,
 			activePersistentProcessId: this.activeInstance ? this.activeInstance.persistentProcessId : undefined,
-			terminals: instances.map(t => {
+			terminals: instances.map(({ instance }, index) => {
 				return {
-					relativeSize: totalSize > 0 ? this._splitPaneContainer!.getPaneSize(t) / totalSize : 0,
-					terminal: t.persistentProcessId || 0
+					relativeSize: totalSize > 0 ? sizes[index] / totalSize : 0,
+					terminal: instance.persistentProcessId || 0
 				};
 			})
 		};
