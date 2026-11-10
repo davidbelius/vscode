@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { deepStrictEqual, strictEqual } from 'assert';
+import { deepStrictEqual, rejects, strictEqual } from 'assert';
 import { CancellationToken } from '../../../../../base/common/cancellation.js';
 import { Codicon } from '../../../../../base/common/codicons.js';
 import { Emitter, Event } from '../../../../../base/common/event.js';
@@ -12,8 +12,9 @@ import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../base/tes
 import { ConfigurationTarget, IConfigurationService, type IConfigurationChangeEvent } from '../../../../../platform/configuration/common/configuration.js';
 import { TestConfigurationService } from '../../../../../platform/configuration/test/common/testConfigurationService.js';
 import { TestInstantiationService } from '../../../../../platform/instantiation/test/common/instantiationServiceMock.js';
-import { IPickOptions, IQuickInputService, IQuickPick, IQuickPickItem, Omit, QuickPickInput } from '../../../../../platform/quickinput/common/quickInput.js';
+import { IPickOptions, IQuickInputService, IQuickPick, IQuickPickItem, IQuickPickItemButtonEvent, Omit, QuickPickInput } from '../../../../../platform/quickinput/common/quickInput.js';
 import { IRemoteAgentEnvironment } from '../../../../../platform/remote/common/remoteAgentEnvironment.js';
+import { INotificationHandle, INotificationService } from '../../../../../platform/notification/common/notification.js';
 import { IExtensionTerminalProfile, ITerminalBackend, ITerminalProfile } from '../../../../../platform/terminal/common/terminal.js';
 import { IThemeService } from '../../../../../platform/theme/common/themeService.js';
 import { TestThemeService } from '../../../../../platform/theme/test/common/testThemeService.js';
@@ -50,6 +51,7 @@ class MockTerminalProfileService implements Partial<ITerminalProfileService> {
 	contributedProfiles?: IExtensionTerminalProfile[] | undefined = [];
 	private readonly _onDidChangeAvailableProfiles = new Emitter<ITerminalProfile[]>();
 	readonly onDidChangeAvailableProfiles = this._onDidChangeAvailableProfiles.event;
+	get hasPickerListeners(): boolean { return this._onDidChangeAvailableProfiles.hasListeners(); }
 	async getPlatformKey(): Promise<string> {
 		return 'linux';
 	}
@@ -83,22 +85,44 @@ class MockQuickInputService implements Partial<IQuickInputService> {
 }
 
 class LiveQuickInputService extends MockQuickInputService {
+	constructor(private readonly _autoSelect = false) { super(); }
 	private _items: QuickPickInput<IProfileQuickPickItem>[] = [];
 	private _selectionResolve: ((item: IProfileQuickPickItem | undefined) => void) | undefined;
 	private readonly _onDidAccept = new Emitter<{ inBackground: boolean }>();
 	private readonly _onDidHide = new Emitter<void>();
+	private readonly _onDidTriggerItemButton = new Emitter<IQuickPickItemButtonEvent<IProfileQuickPickItem>>();
 	private _selectedItems: IProfileQuickPickItem[] = [];
 	private _activeItems: IProfileQuickPickItem[] = [];
+	private _value = '';
+	private _hidden = false;
+	private _pickerDisposed = false;
+	onInput: (() => void) | undefined;
+	inputError: Error | undefined;
 	private _shownResolve!: () => void;
 	readonly shown = new Promise<void>(resolve => this._shownResolve = resolve);
 	get visibleProfileNames(): string[] {
 		return this._items.filter((item): item is IProfileQuickPickItem => 'profileName' in item).map(item => item.profileName);
 	}
-	select(profileName: string): void {
+	get query(): string { return this._value; }
+	get hidden(): boolean { return this._hidden; }
+	get pickerDisposed(): boolean { return this._pickerDisposed; }
+	get activeProfileName(): string | undefined { return this._activeItems[0]?.profileName; }
+	get selectedProfileName(): string | undefined { return this._selectedItems[0]?.profileName; }
+	setQuery(value: string): void { this._value = value; }
+	setActive(profileName: string): void { this._activeItems = [this._find(profileName)]; }
+	setSelected(profileName: string): void { this._selectedItems = [this._find(profileName)]; }
+	triggerConfigure(profileName: string): void {
+		const item = this._find(profileName);
+		if (!item.buttons?.[0]) { throw new Error('profile has no configure button'); }
+		this._onDidTriggerItemButton.fire({ item, button: item.buttons[0] });
+	}
+	private _find(profileName: string): IProfileQuickPickItem {
 		const item = this._items.find((candidate): candidate is IProfileQuickPickItem => 'profileName' in candidate && candidate.profileName === profileName);
-		if (!item) {
-			throw new Error(`profile ${profileName} is not selectable in the open picker`);
-		}
+		if (!item) { throw new Error(`profile ${profileName} is not selectable in the open picker`); }
+		return item;
+	}
+	select(profileName: string): void {
+		const item = this._find(profileName);
 		if (this._selectionResolve) {
 			this._selectionResolve(item);
 			this._selectionResolve = undefined;
@@ -110,11 +134,18 @@ class LiveQuickInputService extends MockQuickInputService {
 	dismiss(): void {
 		this._selectionResolve?.(undefined);
 		this._selectionResolve = undefined;
+		this._hidden = true;
 		this._onDidHide.fire();
 	}
 	dispose(): void {
 		this._onDidAccept.dispose();
 		this._onDidHide.dispose();
+		this._onDidTriggerItemButton.dispose();
+	}
+	async input(): Promise<string> {
+		this.onInput?.();
+		if (this.inputError) { throw this.inputError; }
+		return 'Saved Native Profile';
 	}
 	override pick(picks: QuickPickInput<IProfileQuickPickItem>[] | Promise<QuickPickInput<IProfileQuickPickItem>[]>, options?: IPickOptions<IProfileQuickPickItem> & { canPickMany: true }, token?: CancellationToken): Promise<IProfileQuickPickItem[] | undefined>;
 	override pick(picks: QuickPickInput<IProfileQuickPickItem>[] | Promise<QuickPickInput<IProfileQuickPickItem>[]>, options?: IPickOptions<IProfileQuickPickItem> & { canPickMany: false }, token?: CancellationToken): Promise<IProfileQuickPickItem | undefined>;
@@ -129,18 +160,24 @@ class LiveQuickInputService extends MockQuickInputService {
 	createQuickPick<T extends IQuickPickItem>(): IQuickPick<T, { useSeparators: boolean }> {
 		const service = this;
 		return {
+			get value() { return service._value; },
+			set value(value: string) { service._value = value; },
 			get items() { return service._items as unknown as readonly QuickPickInput<T>[]; },
 			set items(value: readonly QuickPickInput<T>[]) { service._items = value as unknown as QuickPickInput<IProfileQuickPickItem>[]; },
 			get selectedItems() { return service._selectedItems as unknown as readonly T[]; },
 			set selectedItems(value: readonly T[]) { service._selectedItems = value as unknown as IProfileQuickPickItem[]; },
 			get activeItems() { return service._activeItems as unknown as readonly T[]; },
 			set activeItems(value: readonly T[]) { service._activeItems = value as unknown as IProfileQuickPickItem[]; },
+			get keyMods() { return service._pick.keyMods; },
 			onDidAccept: service._onDidAccept.event,
 			onDidHide: service._onDidHide.event,
-			onDidTriggerItemButton: Event.None,
-			show: () => service._shownResolve(),
-			hide: () => service._onDidHide.fire(),
-			dispose: () => { }
+			onDidTriggerItemButton: service._onDidTriggerItemButton.event,
+			show: () => {
+				service._shownResolve();
+				if (service._autoSelect) { queueMicrotask(() => service.select(service._pick.profileName)); }
+			},
+			hide: () => { service._hidden = true; service._onDidHide.fire(); },
+			dispose: () => { service._pickerDisposed = true; }
 		} as unknown as IQuickPick<T, { useSeparators: boolean }>;
 	}
 }
@@ -457,16 +494,17 @@ suite('TerminalProfileService', () => {
 	});
 
 	suite('Profiles Quickpick', () => {
-		let quickInputService: MockQuickInputService;
+		let quickInputService: LiveQuickInputService;
 		let mockTerminalProfileService: MockTerminalProfileService;
 		let terminalProfileQuickpick: TestTerminalProfileQuickpick;
 		setup(async () => {
-			quickInputService = new MockQuickInputService();
+			quickInputService = new LiveQuickInputService(true);
 			mockTerminalProfileService = new MockTerminalProfileService();
 			instantiationService.stub(IQuickInputService, quickInputService);
 			instantiationService.stub(ITerminalProfileService, mockTerminalProfileService);
 			terminalProfileQuickpick = instantiationService.createInstance(TestTerminalProfileQuickpick);
 		});
+		teardown(() => quickInputService.dispose());
 		test('setDefault', async () => {
 			powershellProfile.isDefault = false;
 			mockTerminalProfileService.setProfiles([powershellProfile], [jsdebugProfile]);
@@ -475,6 +513,7 @@ suite('TerminalProfileService', () => {
 			deepStrictEqual(result, powershellProfile.profileName);
 		});
 		test('setDefault to contributed', async () => {
+			mockTerminalProfileService.setProfiles([powershellProfile], [jsdebugProfile]);
 			mockTerminalProfileService.setDefaultProfileName(powershellProfile.profileName);
 			quickInputService.setPick(jsdebugPick);
 			const result = await terminalProfileQuickpick.showAndGetResult('setDefault');
@@ -491,6 +530,7 @@ suite('TerminalProfileService', () => {
 		});
 
 		test('createInstance', async () => {
+			mockTerminalProfileService.setProfiles([powershellProfile], []);
 			mockTerminalProfileService.setDefaultProfileName(powershellProfile.profileName);
 			const pick = { ...powershellPick, keyMods: { alt: true, ctrlCmd: false, shift: false } };
 			quickInputService.setPick(pick);
@@ -513,9 +553,6 @@ suite('TerminalProfileService', () => {
 				strictEqual(opened, 'shown', 'profile picker must open before the late contribution');
 				deepStrictEqual(liveQuickInputService.visibleProfileNames, [powershellProfile.profileName]);
 				mockTerminalProfileService.setProfiles([powershellProfile], [jsdebugProfile]);
-				for (let i = 0; i < 20 && !liveQuickInputService.visibleProfileNames.includes(jsdebugProfile.title); i++) {
-					await new Promise(resolve => setTimeout(resolve, 10));
-				}
 				strictEqual(liveQuickInputService.visibleProfileNames.includes(jsdebugProfile.title), true,
 					'late contributed profile must appear in the picker that is already open');
 				liveQuickInputService.select(jsdebugProfile.title);
@@ -535,7 +572,191 @@ suite('TerminalProfileService', () => {
 			}
 		});
 
+		test('open picker adds a native profile and keeps query, active item and selected item by identity', async () => {
+			const live = new LiveQuickInputService();
+			instantiationService.stub(IQuickInputService, live);
+			const picker = instantiationService.createInstance(TestTerminalProfileQuickpick);
+			const bash = { profileName: 'Bash', path: '/bin/bash', isDefault: false };
+			mockTerminalProfileService.setProfiles([powershellProfile, bash], [jsdebugProfile]);
+			const result = picker.showAndGetResult('createInstance');
+			try {
+				await live.shown;
+				live.setQuery('bash');
+				live.setActive(bash.profileName);
+				live.setSelected(bash.profileName);
+				const bashPreview = { profileName: 'Bash Preview', path: '/bin/bash', isDefault: false };
+				mockTerminalProfileService.setProfiles([powershellProfile, bash, bashPreview], [jsdebugProfile]);
+				deepStrictEqual(live.visibleProfileNames, [bash.profileName, bashPreview.profileName, powershellProfile.profileName, jsdebugProfile.title]);
+				strictEqual(live.query, 'bash');
+				strictEqual(live.activeProfileName, bash.profileName);
+				strictEqual(live.selectedProfileName, bash.profileName);
+				live.select(bashPreview.profileName);
+				deepStrictEqual(await result, { config: bashPreview, keyMods: undefined });
+				strictEqual(mockTerminalProfileService.hasPickerListeners, false);
+			} finally {
+				live.dismiss();
+				live.dispose();
+				await result.catch(() => undefined);
+			}
+		});
+
+		test('open picker removes a contributed profile without retaining stale highlight or selection', async () => {
+			const live = new LiveQuickInputService();
+			instantiationService.stub(IQuickInputService, live);
+			const picker = instantiationService.createInstance(TestTerminalProfileQuickpick);
+			mockTerminalProfileService.setProfiles([powershellProfile], [jsdebugProfile]);
+			const result = picker.showAndGetResult('createInstance');
+			try {
+				await live.shown;
+				live.setQuery('JavaScript');
+				live.setActive(jsdebugProfile.title);
+				live.setSelected(jsdebugProfile.title);
+				mockTerminalProfileService.setProfiles([powershellProfile], []);
+				deepStrictEqual(live.visibleProfileNames, [powershellProfile.profileName]);
+				strictEqual(live.query, 'JavaScript');
+				strictEqual(live.activeProfileName, undefined);
+				strictEqual(live.selectedProfileName, undefined);
+				live.dismiss();
+				strictEqual(await result, undefined);
+				strictEqual(mockTerminalProfileService.hasPickerListeners, false);
+				mockTerminalProfileService.setProfiles([powershellProfile], [jsdebugProfile]);
+				deepStrictEqual(live.visibleProfileNames, [powershellProfile.profileName]);
+			} finally {
+				live.dismiss();
+				live.dispose();
+				await result.catch(() => undefined);
+			}
+		});
+
+		test('open picker retains contributed highlight by extension and id across refreshed items', async () => {
+			const live = new LiveQuickInputService();
+			instantiationService.stub(IQuickInputService, live);
+			const picker = instantiationService.createInstance(TestTerminalProfileQuickpick);
+			mockTerminalProfileService.setProfiles([powershellProfile], [jsdebugProfile]);
+			const result = picker.showAndGetResult('createInstance');
+			try {
+				await live.shown;
+				live.setQuery('Debug');
+				live.setActive(jsdebugProfile.title);
+				live.setSelected(jsdebugProfile.title);
+				mockTerminalProfileService.setProfiles([powershellProfile], [{ ...jsdebugProfile }]);
+				strictEqual(live.query, 'Debug');
+				strictEqual(live.activeProfileName, jsdebugProfile.title);
+				strictEqual(live.selectedProfileName, jsdebugProfile.title);
+				live.dismiss();
+				strictEqual(await result, undefined);
+			} finally {
+				live.dismiss();
+				live.dispose();
+				await result.catch(() => undefined);
+			}
+		});
+
+		test('configure button still writes a native profile while picker stays open', async () => {
+			const live = new LiveQuickInputService();
+			instantiationService.stub(IQuickInputService, live);
+			const picker = instantiationService.createInstance(TestTerminalProfileQuickpick);
+			mockTerminalProfileService.setProfiles([powershellProfile], []);
+			let complete!: (value: { key: string; value: unknown }) => void;
+			const configured = new Promise<{ key: string; value: unknown }>(resolve => complete = resolve);
+			configurationService.updateValue = async (key, value) => complete({ key, value });
+			const result = picker.showAndGetResult('createInstance');
+			try {
+				await live.shown;
+				live.triggerConfigure(powershellProfile.profileName);
+				const write = await configured;
+				strictEqual(write.key, 'terminal.integrated.profiles.linux');
+				deepStrictEqual(write.value, {
+					PowerShell: { path: powershellProfile.path },
+					'Saved Native Profile': { path: powershellProfile.path }
+				});
+				strictEqual(mockTerminalProfileService.hasPickerListeners, true);
+				live.dismiss();
+				strictEqual(await result, undefined);
+				strictEqual(mockTerminalProfileService.hasPickerListeners, false);
+			} finally {
+				live.dismiss();
+				live.dispose();
+				await result.catch(() => undefined);
+			}
+		});
+
+		test('profile refresh error disposes the open picker subscription', async () => {
+			const live = new LiveQuickInputService();
+			instantiationService.stub(IQuickInputService, live);
+			const picker = instantiationService.createInstance(TestTerminalProfileQuickpick);
+			mockTerminalProfileService.setProfiles([powershellProfile], []);
+			const result = picker.showAndGetResult('createInstance');
+			try {
+				await live.shown;
+				strictEqual(mockTerminalProfileService.hasPickerListeners, true);
+				mockTerminalProfileService.getDefaultProfileName = () => { throw new Error('profile refresh failed'); };
+				mockTerminalProfileService.setProfiles([powershellProfile], [jsdebugProfile]);
+				await rejects(result, /profile refresh failed/);
+				strictEqual(mockTerminalProfileService.hasPickerListeners, false);
+			} finally {
+				live.dismiss();
+				live.dispose();
+				await result.catch(() => undefined);
+			}
+		});
+
+		test('unsafe profile prompt opens after the accepted picker has closed and disposed', async () => {
+			const live = new LiveQuickInputService();
+			instantiationService.stub(IQuickInputService, live);
+			const notifications: Partial<INotificationService> = {
+				prompt: (_severity, _message, choices) => {
+					strictEqual(live.hidden, true);
+					strictEqual(live.pickerDisposed, true);
+					strictEqual(mockTerminalProfileService.hasPickerListeners, false);
+					choices[1].run();
+					return { onDidClose: Event.None } as INotificationHandle;
+				}
+			};
+			instantiationService.stub(INotificationService, notifications);
+			const picker = instantiationService.createInstance(TestTerminalProfileQuickpick);
+			mockTerminalProfileService.setProfiles([{ ...powershellProfile, isUnsafePath: true }], []);
+			const result = picker.showAndGetResult('createInstance');
+			try {
+				await live.shown;
+				live.select(powershellProfile.profileName);
+				strictEqual(await result, undefined);
+			} finally {
+				live.dismiss();
+				live.dispose();
+				await result.catch(() => undefined);
+			}
+		});
+
+		test('configure error remains reported after nested input hides the picker', async () => {
+			const live = new LiveQuickInputService();
+			live.inputError = new Error('configure input failed');
+			live.onInput = () => live.dismiss();
+			instantiationService.stub(IQuickInputService, live);
+			let report!: (value: string) => void;
+			const reported = new Promise<string>(resolve => report = resolve);
+			const notifications: Partial<INotificationService> = {
+				error: message => report(String(message))
+			};
+			instantiationService.stub(INotificationService, notifications);
+			const picker = instantiationService.createInstance(TestTerminalProfileQuickpick);
+			mockTerminalProfileService.setProfiles([powershellProfile], []);
+			const result = picker.showAndGetResult('createInstance');
+			try {
+				await live.shown;
+				live.triggerConfigure(powershellProfile.profileName);
+				strictEqual(await result, undefined);
+				strictEqual(await reported, 'Error: configure input failed');
+				strictEqual(mockTerminalProfileService.hasPickerListeners, false);
+			} finally {
+				live.dismiss();
+				live.dispose();
+				await result.catch(() => undefined);
+			}
+		});
+
 		test('createInstance with contributed', async () => {
+			mockTerminalProfileService.setProfiles([powershellProfile], [jsdebugProfile]);
 			const pick = { ...jsdebugPick, keyMods: { alt: true, ctrlCmd: false, shift: true } };
 			quickInputService.setPick(pick);
 			const result = await terminalProfileQuickpick.showAndGetResult('createInstance');

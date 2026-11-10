@@ -5,7 +5,7 @@
 
 import { Codicon } from '../../../../base/common/codicons.js';
 import { ConfigurationTarget, IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
-import { IQuickInputService, IKeyMods, IPickOptions, IQuickPickSeparator, IQuickInputButton, IQuickPickItem } from '../../../../platform/quickinput/common/quickInput.js';
+import { IQuickInputService, IKeyMods, IQuickPickSeparator, IQuickInputButton, IQuickPickItem } from '../../../../platform/quickinput/common/quickInput.js';
 import { IExtensionTerminalProfile, ITerminalProfile, ITerminalProfileObject, TerminalSettingPrefix, type ITerminalExecutable } from '../../../../platform/terminal/common/terminal.js';
 import { getUriClasses, getColorClass, createColorStyleElement } from './terminalIcon.js';
 import { configureTerminalProfileIcon } from './terminalIcons.js';
@@ -20,6 +20,7 @@ import { basename } from '../../../../base/common/path.js';
 import { INotificationService, Severity } from '../../../../platform/notification/common/notification.js';
 import { hasKey, isString } from '../../../../base/common/types.js';
 import { Event } from '../../../../base/common/event.js';
+import { DisposableStore } from '../../../../base/common/lifecycle.js';
 
 
 type DefaultProfileName = string;
@@ -112,45 +113,88 @@ export class TerminalProfileQuickpick {
 
 	private async _createAndShow(type: 'setDefault' | 'createInstance'): Promise<IProfileQuickPickItem | undefined> {
 		const platformKey = await this._terminalProfileService.getPlatformKey();
-		const profiles = this._terminalProfileService.availableProfiles;
 		const profilesKey = TerminalSettingPrefix.Profiles + platformKey;
-		const defaultProfileName = this._terminalProfileService.getDefaultProfileName();
-		let keyMods: IKeyMods | undefined;
-		const options: IPickOptions<IProfileQuickPickItem> = {
-			placeHolder: type === 'createInstance' ? nls.localize('terminal.integrated.selectProfileToCreate', "Select the terminal profile to create") : nls.localize('terminal.integrated.chooseDefaultProfile', "Select your default terminal profile"),
-			onDidTriggerItemButton: async (context) => {
-				// Get the user's explicit permission to use a potentially unsafe path
-				if (!await this._isProfileSafe(context.item.profile)) {
-					return;
+		const disposables = new DisposableStore();
+		const picker = disposables.add(this._quickInputService.createQuickPick<IProfileQuickPickItem>({ useSeparators: true }));
+		let result: IProfileQuickPickItem | undefined;
+		try {
+			picker.placeholder = type === 'createInstance'
+				? nls.localize('terminal.integrated.selectProfileToCreate', "Select the terminal profile to create")
+				: nls.localize('terminal.integrated.chooseDefaultProfile', "Select your default terminal profile");
+			const updateItems = () => {
+				const active = picker.activeItems[0] && this._profileIdentity(picker.activeItems[0]);
+				const selected = picker.selectedItems[0] && this._profileIdentity(picker.selectedItems[0]);
+				const query = picker.value;
+				const items = this._getQuickPickItems();
+				picker.items = items;
+				if (query !== undefined && picker.value !== query) {
+					picker.value = query;
 				}
-				if (hasKey(context.item.profile, { id: true })) {
-					return;
+				const profileItems = items.filter((item): item is IProfileQuickPickItem => 'profile' in item);
+				if (active) {
+					const replacement = profileItems.find(item => this._profileIdentity(item) === active);
+					picker.activeItems = replacement ? [replacement] : [];
 				}
-				const configProfiles: { [key: string]: ITerminalExecutable | null | undefined } = this._configurationService.getValue(TerminalSettingPrefix.Profiles + platformKey);
-				const existingProfiles = !!configProfiles ? Object.keys(configProfiles) : [];
-				const name = await this._quickInputService.input({
-					prompt: nls.localize('enterTerminalProfileName', "Enter terminal profile name"),
-					value: context.item.profile.profileName,
-					validateInput: async input => {
-						if (existingProfiles.includes(input)) {
-							return nls.localize('terminalProfileAlreadyExists', "A terminal profile already exists with that name");
-						}
-						return undefined;
+				if (selected) {
+					const replacement = profileItems.find(item => this._profileIdentity(item) === selected);
+					picker.selectedItems = replacement ? [replacement] : [];
+				}
+			};
+			updateItems();
+			disposables.add(createColorStyleElement(this._themeService.getColorTheme()));
+			result = await new Promise<IProfileQuickPickItem | undefined>((resolve, reject) => {
+				disposables.add(this._terminalProfileService.onDidChangeAvailableProfiles(() => {
+					try { updateItems(); } catch (error) { reject(error); }
+				}));
+				disposables.add(picker.onDidHide(() => resolve(undefined)));
+				disposables.add(picker.onDidAccept(e => {
+					if (e.inBackground) { return; }
+					const candidate = picker.selectedItems[0] ?? picker.activeItems[0];
+					const current = candidate && picker.items.find(item => 'profile' in item && this._profileIdentity(item) === this._profileIdentity(candidate));
+					if (current && 'profile' in current) {
+						current.keyMods = picker.keyMods;
+						resolve(current);
 					}
-				});
-				if (!name) {
-					return;
-				}
-				const newConfigValue: { [key: string]: ITerminalExecutable | null | undefined } = {
-					...configProfiles,
-					[name]: this._createNewProfileConfig(context.item.profile)
-				};
-				await this._configurationService.updateValue(profilesKey, newConfigValue, ConfigurationTarget.USER);
-			},
-			onKeyMods: mods => keyMods = mods
-		};
+				}));
+				disposables.add(picker.onDidTriggerItemButton(context => {
+					void (async () => {
+						if (!await this._isProfileSafe(context.item.profile) || hasKey(context.item.profile, { id: true })) { return; }
+						const configProfiles: { [key: string]: ITerminalExecutable | null | undefined } = this._configurationService.getValue(profilesKey);
+						const existingProfiles = !!configProfiles ? Object.keys(configProfiles) : [];
+						const name = await this._quickInputService.input({
+							prompt: nls.localize('enterTerminalProfileName', "Enter terminal profile name"),
+							value: context.item.profile.profileName,
+							validateInput: async input => existingProfiles.includes(input)
+								? nls.localize('terminalProfileAlreadyExists', "A terminal profile already exists with that name") : undefined
+						});
+						if (!name) { return; }
+						await this._configurationService.updateValue(profilesKey, {
+							...configProfiles,
+							[name]: this._createNewProfileConfig(context.item.profile)
+						}, ConfigurationTarget.USER);
+					})().catch(error => {
+						this._notificationService.error(error instanceof Error ? error : String(error));
+						reject(error);
+					});
+				}));
+				picker.show();
+			});
+		} finally {
+			try { picker.hide(); } finally { disposables.dispose(); }
+		}
+		if (!result || !await this._isProfileSafe(result.profile)) { return undefined; }
+		return result;
+	}
 
-		// Build quick pick items
+	private _profileIdentity(item: IProfileQuickPickItem): string {
+		return hasKey(item.profile, { id: true })
+			? `extension:${item.profile.extensionIdentifier}:${item.profile.id}`
+			: `native:${item.profile.profileName}`;
+	}
+
+	private _getQuickPickItems(): (IProfileQuickPickItem | IQuickPickSeparator)[] {
+		const profiles = this._terminalProfileService.availableProfiles;
+		const defaultProfileName = this._terminalProfileService.getDefaultProfileName();
 		const quickPickItems: (IProfileQuickPickItem | IQuickPickSeparator)[] = [];
 		const configProfiles = profiles.filter(e => !e.isAutoDetected);
 		const autoDetectedProfiles = profiles.filter(e => e.isAutoDetected);
@@ -206,20 +250,7 @@ export class TerminalProfileQuickpick {
 			quickPickItems.push({ type: 'separator', label: nls.localize('terminalProfiles.detected', "detected") });
 			quickPickItems.push(...this._sortProfileQuickPickItems(autoDetectedProfiles.map(e => this._createProfileQuickPickItem(e)), defaultProfileName!));
 		}
-		const colorStyleDisposable = createColorStyleElement(this._themeService.getColorTheme());
-
-		const result = await this._quickInputService.pick(quickPickItems, options);
-		colorStyleDisposable.dispose();
-		if (!result) {
-			return undefined;
-		}
-		if (!await this._isProfileSafe(result.profile)) {
-			return undefined;
-		}
-		if (keyMods) {
-			result.keyMods = keyMods;
-		}
-		return result;
+		return quickPickItems;
 	}
 
 	private _createNewProfileConfig(profile: ITerminalProfile): ITerminalExecutable {
