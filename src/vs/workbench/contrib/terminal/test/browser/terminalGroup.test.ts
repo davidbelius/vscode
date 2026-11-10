@@ -84,4 +84,25 @@ suite('Workbench - TerminalGroup', () => {
 			[1 / 6, 1 / 3, 1 / 2]);
 	});
 
+	test('redistributes pending ratios when a nonactive pane is removed while hidden', () => {
+		const instantiationService = workbenchInstantiationService({}, store);
+		const group = store.add(instantiationService.createInstance(TerminalGroup, undefined, undefined));
+		const instances = Array.from({ length: 5 }, (_, index) => ({
+			persistentProcessId: index + 1,
+			shouldPersist: true
+		} as ITerminalInstance));
+		Reflect.set(group, '_terminalInstances', instances);
+		group.setActiveInstanceByIndex(4);
+		group.resizePanes([0.12, 0.28, 0.2, 0.2, 0.2]);
+
+		// Visible SplitPaneContainer.remove uses Sizing.Distribute. The same removal
+		// before first visible layout must leave four equally sized persistent panes.
+		group.removeInstance(instances[0]);
+		const layout = group.getLayoutInfo(false);
+		deepStrictEqual(layout.terminals.map(terminal => terminal.terminal), [2, 3, 4, 5]);
+		deepStrictEqual(layout.activePersistentProcessId, 5);
+		deepStrictEqual(layout.terminals.map(terminal => terminal.relativeSize),
+			[0.25, 0.25, 0.25, 0.25]);
+	});
+
 });
