@@ -60,6 +60,7 @@ export class LocalTerminalBackend extends BaseTerminalBackend implements ITermin
 	readonly remoteAuthority = undefined;
 
 	private readonly _ptys: Map<number, LocalPty> = new Map();
+	private _reviveStoredProcessesPromise: Promise<void> | undefined;
 
 	private _directProxyClientEventually: DeferredPromise<MessagePortClient> | undefined;
 	private _directProxy: IPtyService | undefined;
@@ -251,6 +252,7 @@ export class LocalTerminalBackend extends BaseTerminalBackend implements ITermin
 					return current;
 				}
 			}
+			await this._ensureStoredProcessesRevived();
 			const newId = await this._proxy.getRevivedPtyNewId(this._getWorkspaceId(), id);
 			if (newId !== undefined) {
 				return await this._attachToProcess(newId, undefined, true);
@@ -344,9 +346,29 @@ export class LocalTerminalBackend extends BaseTerminalBackend implements ITermin
 	async getTerminalLayoutInfo(): Promise<ITerminalsLayoutInfo | undefined> {
 		const workspaceId = this._getWorkspaceId();
 		const layoutArgs: IGetTerminalLayoutInfoArgs = { workspaceId };
+		await this._ensureStoredProcessesRevived();
+		return this._proxy.getTerminalLayoutInfo(layoutArgs);
+	}
 
-		// Revive processes if needed
+	/** Start or join persisted pty revival before looking up an editor's old ID. */
+	private _ensureStoredProcessesRevived(): Promise<void> {
+		if (this._reviveStoredProcessesPromise) {
+			return this._reviveStoredProcessesPromise;
+		}
 		const serializedState = this._storageService.get(TerminalStorageKeys.TerminalBufferState, StorageScope.WORKSPACE);
+		if (!serializedState) {
+			return Promise.resolve();
+		}
+		const revival = this._reviveStoredProcesses(serializedState);
+		this._reviveStoredProcessesPromise = revival.finally(() => {
+			this._reviveStoredProcessesPromise = undefined;
+		});
+		return this._reviveStoredProcessesPromise;
+	}
+
+	private async _reviveStoredProcesses(serializedState: string): Promise<void> {
+		const workspaceId = this._getWorkspaceId();
+		// Revive processes if needed
 		const reviveBufferState = this._deserializeTerminalState(serializedState);
 		if (reviveBufferState && reviveBufferState.length > 0) {
 			try {
@@ -382,8 +404,6 @@ export class LocalTerminalBackend extends BaseTerminalBackend implements ITermin
 				this._logService.warn('LocalTerminalBackend#getTerminalLayoutInfo Error', (<{ message?: string }>e).message ?? e);
 			}
 		}
-
-		return this._proxy.getTerminalLayoutInfo(layoutArgs);
 	}
 
 	private async _resolveEnvironmentForRevive(variableResolver: terminalEnvironment.VariableResolver | undefined, shellLaunchConfig: IShellLaunchConfig): Promise<{ env: IProcessEnvironment; environmentVariableCollections: ReturnType<typeof serializeEnvironmentVariableCollections> | undefined }> {
