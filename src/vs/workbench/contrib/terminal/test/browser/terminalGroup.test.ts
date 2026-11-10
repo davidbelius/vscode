@@ -105,4 +105,51 @@ suite('Workbench - TerminalGroup', () => {
 			[0.25, 0.25, 0.25, 0.25]);
 	});
 
+	test('keeps normalized pending sizes through repeated removals and clears the empty group', () => {
+		const instantiationService = workbenchInstantiationService({}, store);
+		const group = store.add(instantiationService.createInstance(TerminalGroup, undefined, undefined));
+		const instances = Array.from({ length: 5 }, (_, index) => ({
+			persistentProcessId: index + 1,
+			shouldPersist: true
+		} as ITerminalInstance));
+		Reflect.set(group, '_terminalInstances', instances);
+		group.setActiveInstanceByIndex(4);
+		group.resizePanes([0.12, 0.28, 0.2, 0.2, 0.2]);
+
+		for (let removed = 0; removed < 4; removed++) {
+			group.removeInstance(instances[removed]);
+			const layout = group.getLayoutInfo(false);
+			const remaining = instances.slice(removed + 1);
+			deepStrictEqual(layout.terminals.map(terminal => terminal.terminal),
+				remaining.map(terminal => terminal.persistentProcessId));
+			deepStrictEqual(layout.activePersistentProcessId, 5);
+			const sizes = layout.terminals.map(terminal => terminal.relativeSize);
+			ok(sizes.every(size => Number.isFinite(size) && Math.abs(size - 1 / remaining.length) <= 1e-10),
+				`Pending sizes after removal ${removed + 1} are not equally distributed: ${sizes}`);
+			ok(Math.abs(sizes.reduce((total, size) => total + size, 0) - 1) <= 1e-10);
+		}
+		group.removeInstance(instances[4]);
+		deepStrictEqual(group.getLayoutInfo(false).terminals, []);
+		deepStrictEqual(Reflect.get(group, '_initialRelativeSizes'), undefined);
+	});
+
+	test('ignores removal of an absent instance without changing pending ratios', () => {
+		const instantiationService = workbenchInstantiationService({}, store);
+		const group = store.add(instantiationService.createInstance(TerminalGroup, undefined, undefined));
+		const instances = Array.from({ length: 4 }, (_, index) => ({
+			persistentProcessId: index + 1,
+			shouldPersist: true
+		} as ITerminalInstance));
+		Reflect.set(group, '_terminalInstances', instances);
+		group.setActiveInstanceByIndex(3);
+		group.resizePanes([0.1, 0.2, 0.3, 0.4]);
+		const before = group.getLayoutInfo(false);
+		const sizes = before.terminals.map(terminal => terminal.relativeSize);
+		ok(sizes.every(Number.isFinite) && Math.abs(sizes.reduce((total, size) => total + size, 0) - 1) <= 1e-10);
+		ok(Math.max(...sizes) - Math.min(...sizes) > 0.2);
+
+		group.removeInstance({ persistentProcessId: 99, shouldPersist: true } as ITerminalInstance);
+		deepStrictEqual(group.getLayoutInfo(false), before);
+	});
+
 });
