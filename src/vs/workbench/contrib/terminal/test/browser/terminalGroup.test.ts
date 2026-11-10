@@ -65,4 +65,23 @@ suite('Workbench - TerminalGroup', () => {
 		deepStrictEqual(group.getLayoutInfo(false).terminals.map(terminal => terminal.relativeSize),
 			[1 / 3, 2 / 3]);
 	});
+	test('uses measured pane sizes for all terminals when pending membership differs', () => {
+		const instantiationService = workbenchInstantiationService({}, store);
+		const group = store.add(instantiationService.createInstance(TerminalGroup, undefined, undefined));
+		const instances = Array.from({ length: 3 }, (_, index) => ({
+			persistentProcessId: index + 1,
+			shouldPersist: true
+		} as ITerminalInstance));
+		Reflect.set(group, '_terminalInstances', instances);
+		group.resizePanes([0.25, 0.75]);
+		Reflect.set(group, '_splitPaneContainer', {
+			dispose() {},
+			getPaneSize(instance: ITerminalInstance): number {
+				return (instances.indexOf(instance) + 1) * 100;
+			}
+		});
+		deepStrictEqual(group.getLayoutInfo(false).terminals.map(terminal => terminal.relativeSize),
+			[1 / 6, 1 / 3, 1 / 2]);
+	});
+
 });
