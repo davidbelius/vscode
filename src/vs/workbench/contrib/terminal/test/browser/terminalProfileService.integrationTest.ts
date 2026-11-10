@@ -3,16 +3,16 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { deepStrictEqual } from 'assert';
+import { deepStrictEqual, strictEqual } from 'assert';
 import { CancellationToken } from '../../../../../base/common/cancellation.js';
 import { Codicon } from '../../../../../base/common/codicons.js';
-import { Emitter } from '../../../../../base/common/event.js';
+import { Emitter, Event } from '../../../../../base/common/event.js';
 import { isLinux, isWindows, OperatingSystem } from '../../../../../base/common/platform.js';
 import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../base/test/common/utils.js';
 import { ConfigurationTarget, IConfigurationService, type IConfigurationChangeEvent } from '../../../../../platform/configuration/common/configuration.js';
 import { TestConfigurationService } from '../../../../../platform/configuration/test/common/testConfigurationService.js';
 import { TestInstantiationService } from '../../../../../platform/instantiation/test/common/instantiationServiceMock.js';
-import { IPickOptions, IQuickInputService, Omit, QuickPickInput } from '../../../../../platform/quickinput/common/quickInput.js';
+import { IPickOptions, IQuickInputService, IQuickPick, IQuickPickItem, Omit, QuickPickInput } from '../../../../../platform/quickinput/common/quickInput.js';
 import { IRemoteAgentEnvironment } from '../../../../../platform/remote/common/remoteAgentEnvironment.js';
 import { IExtensionTerminalProfile, ITerminalBackend, ITerminalProfile } from '../../../../../platform/terminal/common/terminal.js';
 import { IThemeService } from '../../../../../platform/theme/common/themeService.js';
@@ -48,6 +48,8 @@ class MockTerminalProfileService implements Partial<ITerminalProfileService> {
 	_defaultProfileName: string | undefined;
 	availableProfiles?: ITerminalProfile[] | undefined = [];
 	contributedProfiles?: IExtensionTerminalProfile[] | undefined = [];
+	private readonly _onDidChangeAvailableProfiles = new Emitter<ITerminalProfile[]>();
+	readonly onDidChangeAvailableProfiles = this._onDidChangeAvailableProfiles.event;
 	async getPlatformKey(): Promise<string> {
 		return 'linux';
 	}
@@ -57,6 +59,7 @@ class MockTerminalProfileService implements Partial<ITerminalProfileService> {
 	setProfiles(profiles: ITerminalProfile[], contributed: IExtensionTerminalProfile[]): void {
 		this.availableProfiles = profiles;
 		this.contributedProfiles = contributed;
+		this._onDidChangeAvailableProfiles.fire(profiles);
 	}
 	setDefaultProfileName(name: string): void {
 		this._defaultProfileName = name;
@@ -76,6 +79,69 @@ class MockQuickInputService implements Partial<IQuickInputService> {
 
 	setPick(pick: IProfileQuickPickItem) {
 		this._pick = pick;
+	}
+}
+
+class LiveQuickInputService extends MockQuickInputService {
+	private _items: QuickPickInput<IProfileQuickPickItem>[] = [];
+	private _selectionResolve: ((item: IProfileQuickPickItem | undefined) => void) | undefined;
+	private readonly _onDidAccept = new Emitter<{ inBackground: boolean }>();
+	private readonly _onDidHide = new Emitter<void>();
+	private _selectedItems: IProfileQuickPickItem[] = [];
+	private _activeItems: IProfileQuickPickItem[] = [];
+	private _shownResolve!: () => void;
+	readonly shown = new Promise<void>(resolve => this._shownResolve = resolve);
+	get visibleProfileNames(): string[] {
+		return this._items.filter((item): item is IProfileQuickPickItem => 'profileName' in item).map(item => item.profileName);
+	}
+	select(profileName: string): void {
+		const item = this._items.find((candidate): candidate is IProfileQuickPickItem => 'profileName' in candidate && candidate.profileName === profileName);
+		if (!item) {
+			throw new Error(`profile ${profileName} is not selectable in the open picker`);
+		}
+		if (this._selectionResolve) {
+			this._selectionResolve(item);
+			this._selectionResolve = undefined;
+		} else {
+			this._selectedItems = [item];
+			this._onDidAccept.fire({ inBackground: false });
+		}
+	}
+	dismiss(): void {
+		this._selectionResolve?.(undefined);
+		this._selectionResolve = undefined;
+		this._onDidHide.fire();
+	}
+	dispose(): void {
+		this._onDidAccept.dispose();
+		this._onDidHide.dispose();
+	}
+	override pick(picks: QuickPickInput<IProfileQuickPickItem>[] | Promise<QuickPickInput<IProfileQuickPickItem>[]>, options?: IPickOptions<IProfileQuickPickItem> & { canPickMany: true }, token?: CancellationToken): Promise<IProfileQuickPickItem[] | undefined>;
+	override pick(picks: QuickPickInput<IProfileQuickPickItem>[] | Promise<QuickPickInput<IProfileQuickPickItem>[]>, options?: IPickOptions<IProfileQuickPickItem> & { canPickMany: false }, token?: CancellationToken): Promise<IProfileQuickPickItem | undefined>;
+	override pick(picks: QuickPickInput<IProfileQuickPickItem>[] | Promise<QuickPickInput<IProfileQuickPickItem>[]>, options?: Omit<IPickOptions<IProfileQuickPickItem>, 'canPickMany'>, token?: CancellationToken): Promise<IProfileQuickPickItem | undefined>;
+	override async pick(picks: QuickPickInput<IProfileQuickPickItem>[] | Promise<QuickPickInput<IProfileQuickPickItem>[]>): Promise<SingleOrMany<IProfileQuickPickItem> | undefined> {
+		this._items = await picks;
+		this._shownResolve();
+		return new Promise(resolve => this._selectionResolve = resolve);
+	}
+	createQuickPick<T extends IQuickPickItem>(options: { useSeparators: true }): IQuickPick<T, { useSeparators: true }>;
+	createQuickPick<T extends IQuickPickItem>(options?: { useSeparators: boolean }): IQuickPick<T, { useSeparators: false }>;
+	createQuickPick<T extends IQuickPickItem>(): IQuickPick<T, { useSeparators: boolean }> {
+		const service = this;
+		return {
+			get items() { return service._items as unknown as readonly QuickPickInput<T>[]; },
+			set items(value: readonly QuickPickInput<T>[]) { service._items = value as unknown as QuickPickInput<IProfileQuickPickItem>[]; },
+			get selectedItems() { return service._selectedItems as unknown as readonly T[]; },
+			set selectedItems(value: readonly T[]) { service._selectedItems = value as unknown as IProfileQuickPickItem[]; },
+			get activeItems() { return service._activeItems as unknown as readonly T[]; },
+			set activeItems(value: readonly T[]) { service._activeItems = value as unknown as IProfileQuickPickItem[]; },
+			onDidAccept: service._onDidAccept.event,
+			onDidHide: service._onDidHide.event,
+			onDidTriggerItemButton: Event.None,
+			show: () => service._shownResolve(),
+			hide: () => service._onDidHide.fire(),
+			dispose: () => { }
+		} as unknown as IQuickPick<T, { useSeparators: boolean }>;
 	}
 }
 
@@ -430,6 +496,43 @@ suite('TerminalProfileService', () => {
 			quickInputService.setPick(pick);
 			const result = await terminalProfileQuickpick.showAndGetResult('createInstance');
 			deepStrictEqual(result, { config: powershellProfile, keyMods: { alt: true, ctrlCmd: false, shift: false } });
+		});
+
+		test('open createInstance picker makes a late contributed profile selectable without reopening', async () => {
+			const liveQuickInputService = new LiveQuickInputService();
+			instantiationService.stub(IQuickInputService, liveQuickInputService);
+			const livePicker = instantiationService.createInstance(TestTerminalProfileQuickpick);
+			mockTerminalProfileService.setProfiles([powershellProfile], []);
+			const result = livePicker.showAndGetResult('createInstance');
+			try {
+				const opened = await Promise.race([
+					liveQuickInputService.shown.then(() => 'shown'),
+					result.then(() => 'closed'),
+					new Promise<string>(resolve => setTimeout(() => resolve('timeout'), 5000))
+				]);
+				strictEqual(opened, 'shown', 'profile picker must open before the late contribution');
+				deepStrictEqual(liveQuickInputService.visibleProfileNames, [powershellProfile.profileName]);
+				mockTerminalProfileService.setProfiles([powershellProfile], [jsdebugProfile]);
+				for (let i = 0; i < 20 && !liveQuickInputService.visibleProfileNames.includes(jsdebugProfile.title); i++) {
+					await new Promise(resolve => setTimeout(resolve, 10));
+				}
+				strictEqual(liveQuickInputService.visibleProfileNames.includes(jsdebugProfile.title), true,
+					'late contributed profile must appear in the picker that is already open');
+				liveQuickInputService.select(jsdebugProfile.title);
+				deepStrictEqual(await result, {
+					config: {
+						extensionIdentifier: jsdebugProfile.extensionIdentifier,
+						id: jsdebugProfile.id,
+						title: jsdebugProfile.title,
+						options: { color: undefined, icon: jsdebugProfile.icon }
+					},
+					keyMods: undefined
+				});
+			} finally {
+				liveQuickInputService.dismiss();
+				liveQuickInputService.dispose();
+				await result.catch(() => undefined);
+			}
 		});
 
 		test('createInstance with contributed', async () => {
