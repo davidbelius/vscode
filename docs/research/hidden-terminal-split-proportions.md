@@ -1,0 +1,23 @@
+# Hidden terminal split proportions across repeated hidden restoration
+
+## Reproduction
+
+The release baseline is `f405fe233bbd3fd0647968e9356c2816362b2b3d`. In a plain local Windows Insiders workspace, create one terminal, split it into five equal panes, hide the panel, perform two window reloads without revealing the panel, then reveal it. Pane widths changed from `118/117/117/117/120` to `80/79/79/79/272` px. Two graceful close/reopens while the panel remained hidden produced the same widths. A single hidden lifecycle followed by a reveal passed. Collision IDs, terminal editor tabs, renames, and a second terminal group are unnecessary. Evidence: `windows-loop-20261110/hidden-split-diagnostic01.jsonl`, `hidden-split-diagnostic03.jsonl`, and `hidden-split-diagnostic04.jsonl` in the workspace reports.
+
+An unchanged Linux Insiders combined11 build reproduced the repeated-hidden-reload failure: `133/132/132/132/133` became `80/79/79/79/345` px. That control establishes cross-platform behavior and shows the existing eleven combined patches do not address it. Evidence: `hidden-terminal-split-loop-20261110/linux-combined11-hidden-split-control.jsonl`. This control is diagnostic, not a fix qualification.
+
+## Source cause and placement
+
+`TerminalGroup` holds `_initialRelativeSizes` until its first visible layout. `TerminalService` recreates groups using persisted `relativeSize` values. `TerminalGroup.getLayoutInfo` on the baseline instead serializes measured split-pane sizes. While the panel remains hidden, those sizes can be zero or minimum-biased; the second lifecycle saves the wrong ratios. Four panes settle at the 80 px minimum and the last receives the remainder. The fix belongs in terminal group layout serialization. It is independent of orientation tab-list width, editor grid bounds, and terminal ID collision patches.
+
+This extends earlier VS Code work. [Issue #192517](https://github.com/microsoft/vscode/issues/192517) reported terminal group ratios lost after reload; [PR #192519](https://github.com/microsoft/vscode/pull/192519), commit `adc1f7d176e`, deferred applying `_initialRelativeSizes` until visible layout. [Issue #127671](https://github.com/microsoft/vscode/issues/127671) and [PR #129668](https://github.com/microsoft/vscode/pull/129668) previously addressed an initially narrow split after reload. Both fixes are already in the release baseline. [Issue #45074](https://github.com/microsoft/vscode/issues/45074) concerns panel-height changes during manual resizing, and [issue #329604](https://github.com/microsoft/vscode/issues/329604) concerns an Agents window grid; neither matches repeated hidden persistence.
+
+## Regression, fix, and first visible check
+
+The independent `vibecoded/layout/hidden-terminal-split-proportions/unit-test` branch has commits `0281eb753b5` and `826cfd41272`. Its four focused Chromium cases cover pending equal ratios, pending unequal ratios with a nonpersistent member, measured sizes after layout, and measured fallback if pending membership differs. On the baseline, the two pending-ratio cases fail and the two measured controls pass. Full raw logs are in `hidden-terminal-split-loop-20261110/red-baseline-raw.log` and `red-baseline-compile-raw.log` in the workspace.
+
+The independent fix branch ends at `1f3f1c6b39ff5046d0c4e81be06e96f5f4a8e5a5`. It serializes pending ratios only when their count matches the full group, keeps original indexes while filtering nonpersistent terminals, and normalizes over persistable members. Otherwise it uses measured sizes for the entire group, preserving measured geometry as authority after visible layout. The focused suite passes 4/4; adjacent terminal service suites pass 8/8 and 4/4. See `hidden-terminal-split-loop-20261110/fix.diff`, `unit.diff`, and raw test logs in the workspace.
+
+The first independent Linux Insiders fix UI run, `equal-reload`, passed after two reloads while hidden: visible pane widths stayed `133/132/132/132/133` px, with names, document tabs, panel geometry, and order intact. Evidence: `hidden-terminal-split-loop-20261110/local-insiders-equal-reload-r1.jsonl`. This check covers repeated hidden reload only; independent close/reopen, unequal, side-panel, other environments/releases, and combined patch interactions require their own visible checks. Hidden snapshots alone cannot establish pane-size survival.
+
+The strict local fixture uses clean build HEAD `1f3f1c6b39f…` and checks 14 output sentinels: the prior 13 plus `terminalGroup.js`. A future combined build needs both this output and `terminalTabsList.js` (15 total). Build provenance and UI plans are in `hidden-terminal-split-loop-20261110/fix-build-provenance.json` and `linux-local-plan.md` in the workspace.
