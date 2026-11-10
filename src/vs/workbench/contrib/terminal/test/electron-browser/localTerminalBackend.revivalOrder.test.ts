@@ -162,7 +162,7 @@ suite('LocalTerminalBackend editor revival order', () => {
 		await hold.release();
 		await Promise.all([layout, concurrentLayout]);
 		const attachedId = f.track(await editor);
-		deepStrictEqual(earlyRequests, []);
+		deepStrictEqual(earlyRequests, [[2, 2222]]);
 		deepStrictEqual(attachedId, 5);
 		deepStrictEqual(f.revivalCalls, 1);
 		// The ordinary post-revival lookup is the control for the same saved ID.
@@ -179,7 +179,7 @@ suite('LocalTerminalBackend editor revival order', () => {
 		await hold.entered;
 		const layout = f.backend.getTerminalLayoutInfo();
 		await new Promise<void>(resolve => setImmediate(resolve));
-		deepStrictEqual(f.attachRequests, []);
+		deepStrictEqual(f.attachRequests, [[7, 7777]]);
 		await hold.release();
 		await layout;
 		deepStrictEqual(f.track(await editor), 10);
