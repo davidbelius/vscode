@@ -4,18 +4,16 @@
  *--------------------------------------------------------------------------------------------*/
 
 import assert from 'assert';
-import { Event } from '../../../../../base/common/event.js';
-import { DisposableStore, toDisposable } from '../../../../../base/common/lifecycle.js';
-import { URI } from '../../../../../base/common/uri.js';
 import { Codicon } from '../../../../../base/common/codicons.js';
-import { ITerminalEditingService, ITerminalService } from '../../browser/terminal.js';
-import { TerminalTabList } from '../../browser/terminalTabsList.js';
-import { TestTerminalGroupService, workbenchInstantiationService } from '../../../../test/browser/workbenchTestServices.js';
+import { Event } from '../../../../../base/common/event.js';
+import { DisposableStore, isDisposable, toDisposable } from '../../../../../base/common/lifecycle.js';
+import { URI } from '../../../../../base/common/uri.js';
 import { mock } from '../../../../../base/test/common/mock.js';
 import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../base/test/common/utils.js';
 import { IShellLaunchConfig } from '../../../../../platform/terminal/common/terminal.js';
-import { ITerminalGroup, ITerminalGroupService, ITerminalInstance } from '../../browser/terminal.js';
-import { TerminalTabsAccessibilityProvider } from '../../browser/terminalTabsList.js';
+import { ITerminalEditingService, ITerminalGroup, ITerminalGroupService, ITerminalInstance, ITerminalService } from '../../browser/terminal.js';
+import { TerminalTabList, TerminalTabsAccessibilityProvider } from '../../browser/terminalTabsList.js';
+import { TestTerminalGroupService, workbenchInstantiationService } from '../../../../test/browser/workbenchTestServices.js';
 
 function createInstance(instanceId: number, title: string, hostLabel?: string): ITerminalInstance {
 	return new class extends mock<ITerminalInstance>() {
@@ -50,13 +48,13 @@ suite('TerminalTabsAccessibilityProvider', () => {
 	});
 });
 
-
 suite('TerminalTabList initial active selection', () => {
 	let store: DisposableStore;
 	setup(() => store = new DisposableStore());
 	teardown(() => store.dispose());
+	ensureNoDisposablesAreLeakedInTestSuite();
 
-	function createList() {
+	function createList(activeInstanceIndex: 0 | 1 | 'missing' | 'none' = 1) {
 		const container = document.createElement('div');
 		document.body.appendChild(container);
 		store.add(toDisposable(() => container.remove()));
@@ -71,7 +69,9 @@ suite('TerminalTabList initial active selection', () => {
 		}) as unknown as ITerminalInstance);
 		const groupService = new class extends TestTerminalGroupService {
 			override instances = instances;
-			override activeInstance = instances[1];
+			override activeInstance: ITerminalInstance | undefined = activeInstanceIndex === 'missing'
+				? { ...instances[1], instanceId: 3 } as ITerminalInstance
+				: activeInstanceIndex === 'none' ? undefined : instances[activeInstanceIndex];
 			override getGroupForInstance(instance: ITerminalInstance): ITerminalGroup {
 				return { terminalInstances: [instance] } as ITerminalGroup;
 			}
@@ -92,6 +92,15 @@ suite('TerminalTabList initial active selection', () => {
 			override getEditingTerminal(): undefined { return undefined; }
 			override getEditableData(): undefined { return undefined; }
 		});
+		// These existing constructor-created dependencies are not disposed with the list.
+		const createInstance = instantiationService.createInstance;
+		instantiationService.createInstance = ((ctor: unknown, ...args: unknown[]) => {
+			const instance = Reflect.apply(createInstance, instantiationService, [ctor, ...args]);
+			if (typeof ctor === 'function' && (ctor.name === 'ResourceLabels' || ctor.name === 'TerminalTabsDragAndDrop') && isDisposable(instance)) {
+				store.add(instance);
+			}
+			return instance;
+		}) as typeof instantiationService.createInstance;
 		const list = store.add(instantiationService.createInstance(TerminalTabList, container));
 		list.layout(300, 120);
 		return { list, instances };
@@ -101,6 +110,22 @@ suite('TerminalTabList initial active selection', () => {
 		const { list, instances } = createList();
 		assert.deepStrictEqual(list.getSelectedElements(), [instances[1]]);
 		assert.deepStrictEqual(list.getSelection(), [1]);
+	});
+
+	test('selects the already active first terminal when the list is created', () => {
+		const { list, instances } = createList(0);
+		assert.deepStrictEqual(list.getSelectedElements(), [instances[0]]);
+		assert.deepStrictEqual(list.getSelection(), [0]);
+	});
+
+	test('does not select a row when there is no active terminal', () => {
+		const { list } = createList('none');
+		assert.deepStrictEqual(list.getSelection(), []);
+	});
+
+	test('does not select a row for an active terminal absent from the list', () => {
+		const { list } = createList('missing');
+		assert.deepStrictEqual(list.getSelection(), []);
 	});
 
 	test('generic refresh preserves an intentional multi-selection', () => {
