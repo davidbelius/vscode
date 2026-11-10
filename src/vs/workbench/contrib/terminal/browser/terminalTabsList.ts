@@ -220,6 +220,12 @@ export class TerminalTabList extends WorkbenchList<ITerminalInstance> {
 			this.disposables.add(decorationsService.registerDecorationsProvider(this._decorationsProvider));
 		}
 		this.refresh();
+		const activeInstance = this._terminalGroupService.activeInstance;
+		const activeIndex = activeInstance ? this._terminalGroupService.instances.indexOf(activeInstance) : -1;
+		if (activeIndex >= 0) {
+			this.setSelection([activeIndex]);
+			this.reveal(activeIndex);
+		}
 	}
 
 	private _getFocusMode(): 'singleClick' | 'doubleClick' {
