@@ -389,7 +389,16 @@ export class TerminalGroup extends Disposable implements ITerminalGroup {
 		}
 
 		const wasActiveInstance = instance === this.activeInstance;
+		const hadPendingSizes = this._initialRelativeSizes?.length === this._terminalInstances.length;
 		this._terminalInstances.splice(index, 1);
+		// Visible SplitPaneContainer.remove distributes the remaining views equally.
+		// Do the same before the first visible layout so a hidden save cannot use
+		// stale ratios or zero measured pane sizes after a process exits.
+		if (hadPendingSizes) {
+			this._initialRelativeSizes = this._terminalInstances.length > 0
+				? Array(this._terminalInstances.length).fill(1 / this._terminalInstances.length)
+				: undefined;
+		}
 
 		// Adjust focus if the instance was active
 		if (wasActiveInstance && this._terminalInstances.length > 0) {
