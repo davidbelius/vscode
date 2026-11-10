@@ -47,6 +47,7 @@ suite('LocalTerminalBackend', () => {
 		const attachRequests: [id: number, pid: number | undefined][] = [];
 
 		const instantiationService = store.add(new TestInstantiationService());
+		instantiationService.stub(IStorageService, store.add(new TestStorageService()));
 		instantiationService.stub(IWorkspaceContextService, new TestContextService());
 		instantiationService.stub(ITerminalLogService, new NullLogService());
 		instantiationService.stub(ILocalPtyService, upcastPartial<ILocalPtyService>({
